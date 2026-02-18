@@ -47,22 +47,14 @@ These skills provide **judgment and patterns** — when to use which approach, w
 | Need | Use |
 |------|-----|
 | Understanding the right pattern and avoiding pitfalls | **These skills** |
-| Searching documentation, fetching GraphQL/OAS schemas | [Developer MCP](https://docs.commercetools.com/sdk/mcp/developer-mcp) (free, 100 req/15 min) |
-| CRUD operations on products, carts, orders | [Commerce MCP](https://docs.commercetools.com/sdk/mcp/commerce-mcp) (95+ tools, requires auth) |
+| Searching documentation, fetching GraphQL/OAS schemas | [Developer MCP](https://docs.commercetools.com/sdk/mcp/developer-mcp) |
+| CRUD operations on products, carts, orders | [Commerce MCP](https://docs.commercetools.com/sdk/mcp/commerce-mcp) (requires auth) |
 
 **Best workflow:** Use a skill to understand the _right pattern_ → use the Developer MCP to look up exact field names and API shapes → write the code → use the Commerce MCP to test against your project.
 
 ## About Aries Solutions
 
-[Aries Solutions](https://ariessolutions.io) is a commercetools Platinum partner specializing in composable commerce implementations. We build, launch, and maintain commerce platforms for brands across North America.
-
-### Open Source
-
-We maintain several open-source projects for the commercetools ecosystem:
-
-- **[Shop Assist](https://github.com/ariessolutionsio/shop-assist)** — Merchant Center custom application for cart search and customer service workflows
-- **[Emailer](https://github.com/ariessolutionsio/commercetools-emailer)** — Merchant Center custom application for email template management with drag-and-drop editing
-- **[Custom Objects Editor](https://github.com/ariessolutionsio/custom-objects-editor)** — Merchant Center custom application for managing Custom Objects with schema-driven forms
+[Aries Solutions](https://ariessolutions.io) is a commercetools partner specializing in composable commerce implementations. We build, launch, and maintain commerce platforms for brands across North America.
 
 ## Contributing
 
