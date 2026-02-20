@@ -2,17 +2,41 @@
 
 Custom Applications are standalone React applications that integrate into the Merchant Center as full-page experiences with their own navigation entry. They appear in the MC main menu and have their own URL space under `/:projectKey/:entryPointUriPath`.
 
+## Table of Contents
+- [When to Use a Custom Application](#when-to-use-a-custom-application)
+- [Project Setup](#project-setup)
+  - [Scaffolding](#scaffolding)
+  - [Project Structure](#project-structure)
+- [Configuration](#configuration)
+  - [Cloud Identifiers](#cloud-identifiers)
+  - [Available Application Icons](#available-application-icons)
+  - [Correct Configuration](#correct-configuration)
+  - [additionalEnv for Custom Variables](#additionalenv-for-custom-variables)
+  - [Variable Placeholders](#variable-placeholders)
+  - [Incorrect Configuration -- Common Mistakes](#incorrect-configuration----common-mistakes)
+  - [entryPointUriPath Rules](#entrypointuripath-rules)
+- [Application Shell](#application-shell)
+  - [Entry Point Pattern](#entry-point-pattern)
+- [OAuth Scopes & Permissions](#oauth-scopes--permissions)
+  - [Defining Permission Constants](#defining-permission-constants)
+  - [With Additional Permission Groups](#with-additional-permission-groups)
+  - [Config with Additional Groups](#config-with-additional-groups)
+  - [Enforcing Permissions in Code](#enforcing-permissions-in-code)
+  - [Disabling UI Elements Based on Permissions](#disabling-ui-elements-based-on-permissions)
+  - [How Permissions Flow](#how-permissions-flow)
+- [Routing](#routing)
+  - [Basic Route Setup](#basic-route-setup)
+  - [Using useRoutesCreator for Type-Safe Routing](#using-useroutescreator-for-type-safe-routing)
+  - [Incorrect Routing Patterns](#incorrect-routing-patterns)
+- [Checklist: Custom Application Setup](#checklist-custom-application-setup)
+- [Reference](#reference)
+
 ## When to Use a Custom Application
 
 - You need a **dedicated page** in the Merchant Center (list view, detail view, create/edit forms)
 - The functionality does **not** relate to a single existing built-in page
 - You need **complex multi-page navigation** (tabs, nested routes, modal pages)
 - You are building a **tool** for business users (e.g., email template manager, custom object editor, cart assistant)
-
-**Real-world examples from Aries Labs:**
-- **Shop Assist** -- full cart search and management UI with list and detail views
-- **Emailer** -- email template CRUD with a drag-and-drop editor
-- **Custom Objects Editor** -- schema definition and object management with dynamic forms
 
 ## Project Setup
 
@@ -471,6 +495,3 @@ const match = useRouteMatch();
 - [Application Shell](https://docs.commercetools.com/merchant-center-customizations/tooling-and-configuration/commercetools-frontend-application-shell)
 - [OAuth Scopes and Permissions](https://docs.commercetools.com/merchant-center-customizations/concepts/oauth-scopes-and-user-permissions)
 - [Permissions Development Guide](https://docs.commercetools.com/merchant-center-customizations/development/permissions)
-- [Aries Labs Shop Assist](https://github.com/ariessolutionsio/shop-assist)
-- [Aries Labs Emailer](https://github.com/ariessolutionsio/commercetools-emailer)
-- [Aries Labs Custom Objects Editor](https://github.com/ariessolutionsio/custom-objects-editor)

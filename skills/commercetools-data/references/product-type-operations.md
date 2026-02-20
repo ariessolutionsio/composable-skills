@@ -2,7 +2,17 @@
 
 Variant strategy, adding attributes after launch, enum management, attribute naming rules, search indexing limits, update actions, and design checklist for commercetools product types.
 
-## Pattern 6: Variant Strategy (The 100-Variant Limit)
+## Table of Contents
+- [Pattern 1: Variant Strategy (The 100-Variant Limit)](#pattern-1-variant-strategy-the-100-variant-limit)
+- [Pattern 2: Adding Attributes After Launch](#pattern-2-adding-attributes-after-launch)
+- [Pattern 3: Enum Value Management](#pattern-3-enum-value-management)
+- [Attribute Name Rules](#attribute-name-rules)
+- [Search Indexing Limits](#search-indexing-limits)
+- [Product Type Update Actions](#product-type-update-actions)
+- [Design Checklist](#design-checklist)
+- [Reference](#reference)
+
+## Pattern 1: Variant Strategy (The 100-Variant Limit)
 
 Each product supports up to 100 variants. Plan your variant axes carefully.
 
@@ -49,7 +59,7 @@ const tshirtDraft: ProductDraft = {
 
 **When you hit the 100-variant limit:** Split the product into multiple products grouped by a shared attribute (e.g., one product per color family). Use Product Selections or category assignments to present them together on the storefront.
 
-## Pattern 7: Adding Attributes After Launch
+## Pattern 2: Adding Attributes After Launch
 
 You can safely add new attributes to an existing Product Type. Existing products will have `undefined` for the new attribute until updated.
 
@@ -89,7 +99,7 @@ const updatedType = await apiRoot
 
 **Warning:** When adding an attribute to a type that already has products, set `isRequired: false`. If you set it to `true`, every existing product immediately violates the constraint and cannot be updated until the attribute is populated.
 
-## Pattern 8: Enum Value Management
+## Pattern 3: Enum Value Management
 
 Enum values can be added to existing types but cannot be removed if any product uses them.
 

@@ -2,6 +2,28 @@
 
 Components (Tastics), renderer pipeline, SDK configuration, Studio best practices, and development checklist for commercetools Frontend.
 
+## Table of Contents
+- [Components (Tastics)](#components-tastics)
+  - [Pattern 8: TasticProps and the Tastic Wrapper](#pattern-8-tasticprops-and-the-tastic-wrapper)
+  - [Pattern 8b: The DataSource Wrapper Type](#pattern-8b-the-datasource-wrapper-type)
+  - [Pattern 9: Registering Components (Real Tastic Registry)](#pattern-9-registering-components-real-tastic-registry)
+  - [Pattern 10: Component with Data Source](#pattern-10-component-with-data-source)
+- [Renderer Pipeline](#renderer-pipeline)
+  - [Pattern 11: Page -> Section -> Grid -> Cell -> Tastic](#pattern-11-page---section---grid---cell---tastic)
+- [Frontend SDK v2 Configuration](#frontend-sdk-v2-configuration)
+  - [Pattern 12: Setting Up the Frontend SDK](#pattern-12-setting-up-the-frontend-sdk)
+- [Studio Best Practices for Developers](#studio-best-practices-for-developers)
+  - [Pattern 13: Schema Design for Business Users](#pattern-13-schema-design-for-business-users)
+  - [Pattern 14: Preview Payload for Studio](#pattern-14-preview-payload-for-studio)
+- [commercetools Frontend Checklist](#commercetools-frontend-checklist)
+  - [Extensions](#extensions)
+  - [Components (Tastics)](#components-tastics-1)
+  - [Renderer & Page Structure](#renderer--page-structure)
+  - [Dynamic Page Handlers](#dynamic-page-handlers)
+  - [Studio](#studio)
+  - [SDK](#sdk)
+- [Reference](#reference)
+
 ## Components (Tastics)
 
 ### Pattern 8: TasticProps and the Tastic Wrapper
@@ -125,35 +147,18 @@ import dynamic from 'next/dynamic';
 
 // Lazy-load tastics for code splitting
 const Checkout = dynamic(() => import('./checkout'));
-const ThankYou = dynamic(() => import('./thank-you'));
-const Footer = dynamic(() => import('./footer'));
-const Header = dynamic(() => import('./header'));
 const Cart = dynamic(() => import('./cart'));
 const ProductDetails = dynamic(() => import('./products/details'));
 const ProductList = dynamic(() => import('./products/product-list'));
-const ProductListAlgolia = dynamic(() => import('./products/product-list-algolia'));
-const ProductSlider = dynamic(() => import('./products/slider'));
-const SimilarProducts = dynamic(() => import('./products/similar-products'));
-const AccountDetails = dynamic(() => import('./account/details'));
 const AccountLogin = dynamic(() => import('./account/login'));
-const AccountRegister = dynamic(() => import('./account/register'));
-const AccountOrdersHistory = dynamic(() => import('./account/orders'));
+// ... additional tastics (header, footer, thank-you, account, etc.)
 
 export const tastics = {
   'commercetools/ui/checkout': Checkout,
-  'commercetools/ui/thank-you': ThankYou,
-  'commercetools/ui/footer': Footer,
-  'commercetools/ui/header': Header,
   'commercetools/ui/cart': Cart,
   'commercetools/ui/products/details': ProductDetails,
   'commercetools/ui/products/product-list': ProductList,
-  'commercetools/ui/products/product-list-algolia': ProductListAlgolia,
-  'commercetools/ui/products/slider': ProductSlider,
-  'commercetools/ui/products/similar-products': SimilarProducts,
-  'commercetools/ui/account/details': AccountDetails,
   'commercetools/ui/account/login': AccountLogin,
-  'commercetools/ui/account/register': AccountRegister,
-  'commercetools/ui/account/orders': AccountOrdersHistory,
   // ... additional tastics
 } as TasticRegistry;
 ```

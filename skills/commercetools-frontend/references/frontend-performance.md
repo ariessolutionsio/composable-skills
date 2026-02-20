@@ -4,6 +4,17 @@ Core Web Vitals optimization including image handling, font loading, code splitt
 
 **Impact: HIGH -- Poor Core Web Vitals drop search rankings. Slow pages lose 7% conversion per second of load time.**
 
+## Table of Contents
+- [Core Web Vitals Optimization](#core-web-vitals-optimization)
+  - [Pattern 1: Image Optimization for Product Images](#pattern-1-image-optimization-for-product-images)
+  - [Pattern 2: Font Loading Strategy](#pattern-2-font-loading-strategy)
+  - [Pattern 3: Code Splitting for Commerce Components](#pattern-3-code-splitting-for-commerce-components)
+  - [Pattern 4: Prefetching Critical Navigation](#pattern-4-prefetching-critical-navigation)
+  - [Pattern 5: Avoiding Layout Shift (CLS) on Product Pages](#pattern-5-avoiding-layout-shift-cls-on-product-pages)
+- [Caching Strategies](#caching-strategies)
+  - [Pattern 6: Next.js Fetch Cache for commercetools Data](#pattern-6-nextjs-fetch-cache-for-commercetools-data)
+- [Reference](#reference)
+
 ## Core Web Vitals Optimization
 
 ### Pattern 1: Image Optimization for Product Images

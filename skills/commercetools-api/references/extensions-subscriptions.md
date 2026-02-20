@@ -2,6 +2,28 @@
 
 commercetools provides three mechanisms for extending platform behavior: API Extensions (synchronous, blocking), Subscriptions (asynchronous notifications), and Connect (hosted application runtime). Choosing the wrong mechanism or misconfiguring any of these causes cascading failures that affect every API client, including the Merchant Center.
 
+## Table of Contents
+- [API Extensions vs Subscriptions](#api-extensions-vs-subscriptions)
+- [API Extension Configuration](#api-extension-configuration)
+  - [HTTP Destination](#http-destination)
+  - [AWS Lambda Destination](#aws-lambda-destination)
+  - [Extension Timeout Constraints](#extension-timeout-constraints)
+  - [Extension Limits](#extension-limits)
+- [Subscription Configuration](#subscription-configuration)
+  - [Google Cloud Pub/Sub](#google-cloud-pubsub)
+  - [AWS SQS](#aws-sqs)
+  - [Other Destinations](#other-destinations)
+- [Subscription Reliability](#subscription-reliability)
+  - [Idempotent Message Handlers](#idempotent-message-handlers)
+  - [Handling Message Ordering](#handling-message-ordering)
+  - [Monitoring Subscription Health](#monitoring-subscription-health)
+  - [Eventual Consistency](#eventual-consistency)
+- [Connect Applications](#connect-applications)
+  - [Application Types](#application-types)
+  - [Post-Deploy / Pre-Undeploy Scripts](#post-deploy--pre-undeploy-scripts)
+  - [Connect Deployment Models](#connect-deployment-models)
+- [Checklist](#checklist)
+
 ## API Extensions vs Subscriptions
 
 | Feature | API Extensions | Subscriptions |
@@ -244,99 +266,9 @@ const sqsSubscription = await apiRoot.subscriptions().post({
 }).execute();
 ```
 
-### Azure Service Bus
+### Other Destinations
 
-```typescript
-const azureSubscription = await apiRoot.subscriptions().post({
-  body: {
-    key: 'inventory-events-azure',
-    destination: {
-      type: 'AzureServiceBus',
-      connectionString: process.env.AZURE_SB_CONNECTION_STRING!,
-    },
-    messages: [
-      { resourceTypeId: 'inventory-entry', types: [] }, // empty = all message types
-    ],
-  },
-}).execute();
-```
-
-### AWS EventBridge
-
-```typescript
-const eventBridgeSubscription = await apiRoot.subscriptions().post({
-  body: {
-    key: 'all-events-eventbridge',
-    destination: {
-      type: 'EventBridge',
-      region: 'eu-west-1',
-      accountId: '123456789012',
-    },
-    messages: [
-      { resourceTypeId: 'order', types: [] },
-      { resourceTypeId: 'payment', types: [] },
-    ],
-  },
-}).execute();
-```
-
-### AWS SNS
-
-```typescript
-const snsSubscription = await apiRoot.subscriptions().post({
-  body: {
-    key: 'order-events-sns',
-    destination: {
-      type: 'SNS',
-      topicArn: 'arn:aws:sns:eu-west-1:123456789:order-events',
-      authenticationMode: 'IAM',
-    },
-    messages: [
-      { resourceTypeId: 'order', types: ['OrderCreated', 'OrderStateChanged'] },
-    ],
-  },
-}).execute();
-```
-
-### Azure Event Grid
-
-```typescript
-const eventGridSubscription = await apiRoot.subscriptions().post({
-  body: {
-    key: 'order-events-eventgrid',
-    destination: {
-      type: 'EventGrid',
-      uri: 'https://my-topic.westeurope-1.eventgrid.azure.net/api/events',
-      accessKey: process.env.AZURE_EVENT_GRID_KEY!,
-    },
-    messages: [
-      { resourceTypeId: 'order', types: [] },
-    ],
-  },
-}).execute();
-```
-
-### Confluent Cloud
-
-```typescript
-const confluentSubscription = await apiRoot.subscriptions().post({
-  body: {
-    key: 'order-events-confluent',
-    destination: {
-      type: 'ConfluentCloud',
-      bootstrapServer: 'pkc-xxxxx.eu-west-1.aws.confluent.cloud:9092',
-      apiKey: process.env.CONFLUENT_API_KEY!,
-      apiSecret: process.env.CONFLUENT_API_SECRET!,
-      acks: 'ACKS_ALL',
-      topic: 'order-events',
-      key: 'orderNumber',
-    },
-    messages: [
-      { resourceTypeId: 'order', types: [] },
-    ],
-  },
-}).execute();
-```
+Other destinations (Azure Service Bus, EventBridge, SNS, Azure Event Grid, Confluent Cloud) follow the same pattern -- set the `destination` field to the appropriate type with its credentials.
 
 ## Subscription Reliability
 

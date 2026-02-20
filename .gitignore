@@ -5,3 +5,6 @@ Thumbs.db
 *~
 .idea/
 .vscode/
+.agents
+.claude
+TODO

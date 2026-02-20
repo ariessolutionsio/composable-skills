@@ -2,9 +2,23 @@
 
 Product detail page patterns including variant selection, image gallery, search results, product cards, Algolia integration, and checklist for commercetools storefronts.
 
+## Table of Contents
+- [Product Detail Page (PDP) Patterns](#product-detail-page-pdp-patterns)
+  - [Pattern 1: Fetching Product Data Efficiently](#pattern-1-fetching-product-data-efficiently)
+  - [Pattern 2: Variant Selection UI](#pattern-2-variant-selection-ui)
+  - [Pattern 3: Product Image Gallery](#pattern-3-product-image-gallery)
+- [Search Results Page](#search-results-page)
+  - [Pattern 4: URL-Driven Search with Server Components](#pattern-4-url-driven-search-with-server-components)
+- [Product Card Component](#product-card-component)
+  - [Pattern 5: Reusable Product Card for Grids](#pattern-5-reusable-product-card-for-grids)
+- [Algolia Search Integration (scaffold)](#algolia-search-integration-scaffold)
+  - [Pattern 6: Algolia as an Alternative Search Backend (scaffold)](#pattern-6-algolia-as-an-alternative-search-backend-scaffold)
+- [Product Pages Checklist](#product-pages-checklist)
+- [Reference](#reference)
+
 ## Product Detail Page (PDP) Patterns
 
-### Pattern 4: Fetching Product Data Efficiently
+### Pattern 1: Fetching Product Data Efficiently
 
 **INCORRECT -- fetching the full product resource:**
 
@@ -47,7 +61,7 @@ export async function getProductBySlug(
 }
 ```
 
-### Pattern 5: Variant Selection UI
+### Pattern 2: Variant Selection UI
 
 Variant selection is one of the most complex frontend patterns. The key is mapping variant attributes to selectable options and tracking which combinations are available.
 
@@ -160,25 +174,23 @@ export function VariantSelector({ product, onVariantChange }: Props) {
   };
 
   return (
-    <div className="space-y-4">
+    <div>
       {options.map((option) => (
         <div key={option.name}>
-          <label className="block font-medium capitalize mb-2">
-            {option.name}
-          </label>
-          <div className="flex gap-2 flex-wrap">
+          <label>{option.name}</label>
+          <div>
             {option.values.map((val) => (
               <button
                 key={val.value}
                 onClick={() => handleSelect(option.name, val.value)}
                 disabled={!val.available}
-                className={`px-4 py-2 border rounded ${
+                className={
                   selection[option.name] === val.value
                     ? 'border-black bg-black text-white'
                     : val.available
-                      ? 'border-gray-300 hover:border-gray-500'
+                      ? 'border-gray-300'
                       : 'border-gray-200 text-gray-300 cursor-not-allowed'
-                }`}
+                }
               >
                 {val.label}
               </button>
@@ -188,7 +200,7 @@ export function VariantSelector({ product, onVariantChange }: Props) {
       ))}
 
       {selectedVariant && !selectedVariant.availability?.isOnStock && (
-        <p className="text-red-600 text-sm">This variant is currently out of stock.</p>
+        <p>This variant is currently out of stock.</p>
       )}
     </div>
   );
@@ -208,7 +220,7 @@ const ProductVariant = ({ variants, currentVariant, attribute, onClick }) => {
     <div>
       <h3>{translate(`product.${attribute}`)}</h3>
       <p>{currentVariant?.attributes?.[`${attribute}label`] ?? textToColor(currentVariant?.attributes?.[attribute]).label}</p>
-      <div className="mt-16 flex gap-24">
+      <div>
         {variants.map(({ attributes, id, sku }) => (
           <button
             key={id}
@@ -227,7 +239,7 @@ const ProductVariant = ({ variants, currentVariant, attribute, onClick }) => {
 
 Note: The scaffold distinguishes rendering by attribute name -- `size` renders as text labels, while color-type attributes render as colored circles using `textToColor()` to map attribute values like `"red"` to hex codes.
 
-### Pattern 6: Product Image Gallery
+### Pattern 3: Product Image Gallery
 
 ```typescript
 // components/product/ProductImageGallery.tsx
@@ -247,8 +259,8 @@ export function ProductImageGallery({ images, productName }: Props) {
 
   if (images.length === 0) {
     return (
-      <div className="aspect-square bg-gray-100 flex items-center justify-center">
-        <span className="text-gray-400">No image available</span>
+      <div className="aspect-square">
+        <span>No image available</span>
       </div>
     );
   }
@@ -256,7 +268,7 @@ export function ProductImageGallery({ images, productName }: Props) {
   const mainImage = images[selectedIndex];
 
   return (
-    <div className="space-y-4">
+    <div>
       {/* Main image -- priority loading for LCP */}
       <div className="relative aspect-square">
         <Image
@@ -271,21 +283,19 @@ export function ProductImageGallery({ images, productName }: Props) {
 
       {/* Thumbnails */}
       {images.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto">
+        <div>
           {images.map((img, index) => (
             <button
               key={img.url}
               onClick={() => setSelectedIndex(index)}
-              className={`relative w-16 h-16 flex-shrink-0 border-2 rounded ${
-                index === selectedIndex ? 'border-black' : 'border-transparent'
-              }`}
+              className={index === selectedIndex ? 'border-black' : 'border-transparent'}
             >
               <Image
                 src={img.url}
                 alt={img.label || `${productName} view ${index + 1}`}
                 fill
                 sizes="64px"
-                className="object-cover rounded"
+                className="object-cover"
               />
             </button>
           ))}
@@ -298,7 +308,7 @@ export function ProductImageGallery({ images, productName }: Props) {
 
 ## Search Results Page
 
-### Pattern 7: URL-Driven Search with Server Components
+### Pattern 4: URL-Driven Search with Server Components
 
 ```typescript
 // app/[locale]/search/page.tsx
@@ -341,7 +351,7 @@ export default async function SearchPage({ params, searchParams }: Props) {
 
 ## Product Card Component
 
-### Pattern 8: Reusable Product Card for Grids
+### Pattern 5: Reusable Product Card for Grids
 
 ```typescript
 // components/product/ProductCard.tsx
@@ -366,43 +376,32 @@ export function ProductCard({ product, locale, currency = 'USD' }: Props) {
   const discountedPrice = price?.discounted?.value;
 
   return (
-    <Link
-      href={`/${locale}/products/${slug}`}
-      className="group block"
-    >
-      <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100">
+    <Link href={`/${locale}/products/${slug}`}>
+      <div className="relative aspect-square">
         {image ? (
           <Image
             src={image.url}
             alt={image.label || name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover group-hover:scale-105 transition-transform"
+            className="object-cover"
           />
         ) : (
-          <div className="flex items-center justify-center h-full text-gray-400">
-            No image
-          </div>
+          <div>No image</div>
         )}
       </div>
 
-      <h3 className="mt-2 text-sm font-medium">{name}</h3>
+      <h3>{name}</h3>
 
       {price && (
-        <div className="mt-1">
+        <div>
           {discountedPrice ? (
             <>
-              <span className="text-red-600 font-medium">
-                {formatPrice(discountedPrice.centAmount, discountedPrice.currencyCode, locale)}
-              </span>
-              <span className="text-gray-400 line-through ml-2 text-sm">
-                {formatPrice(price.value.centAmount, price.value.currencyCode, locale)}
-              </span>
+              <span>{formatPrice(discountedPrice.centAmount, discountedPrice.currencyCode, locale)}</span>
+              <span>{formatPrice(price.value.centAmount, price.value.currencyCode, locale)}</span>
             </>
           ) : (
-            <span className="font-medium">
-              {formatPrice(price.value.centAmount, price.value.currencyCode, locale)}
-            </span>
+            <span>{formatPrice(price.value.centAmount, price.value.currencyCode, locale)}</span>
           )}
         </div>
       )}
@@ -411,9 +410,9 @@ export function ProductCard({ product, locale, currency = 'USD' }: Props) {
 }
 ```
 
-## Algolia Search Integration (Official Scaffold Pattern)
+## Algolia Search Integration (scaffold)
 
-### Pattern 9: Algolia as an Alternative Search Backend
+### Pattern 6: Algolia as an Alternative Search Backend (scaffold)
 
 > From the official `scaffold-b2c` repo: The scaffold supports Algolia as a drop-in alternative to the commercetools Product Search API. It wraps the same `ProductListProvider` context inside Algolia's `InstantSearch`, so all filter/sort/pagination logic stays the same.
 

@@ -6,6 +6,14 @@ Product Types are the schema for your product catalog. Once a Product Type is as
 
 This is the single most consequential data modeling decision in any commercetools implementation.
 
+## Table of Contents
+- [The Immutability Rules](#the-immutability-rules)
+- [Pattern 1: Right-Sizing Product Types (The 80% Rule)](#pattern-1-right-sizing-product-types-the-80-rule)
+- [Pattern 2: Lean Attributes (Only What the Storefront Needs)](#pattern-2-lean-attributes-only-what-the-storefront-needs)
+- [Pattern 3: Choosing the Right Attribute Types](#pattern-3-choosing-the-right-attribute-types)
+- [Pattern 4: Attribute Constraints](#pattern-4-attribute-constraints)
+- [Pattern 5: The Mega-Type Anti-Pattern](#pattern-5-the-mega-type-anti-pattern)
+
 ## The Immutability Rules
 
 1. A Product's `productType` reference is set at creation and **never changes**

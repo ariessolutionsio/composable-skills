@@ -2,6 +2,27 @@
 
 commercetools is a cloud-native platform with built-in rate limiting, payload limits, and query complexity constraints. Understanding these limits and optimizing your API usage prevents cascading latency, rate limiting, and timeout failures in production.
 
+## Table of Contents
+- [N+1 Query Pattern](#n1-query-pattern)
+- [Reference Expansion](#reference-expansion)
+  - [Only Expand What You Need](#only-expand-what-you-need)
+  - [GraphQL for Selective Field Fetching](#graphql-for-selective-field-fetching)
+- [Pagination](#pagination)
+  - [Omit Total Count When Not Needed](#omit-total-count-when-not-needed)
+  - [Cursor-Based Pagination for Large Datasets](#cursor-based-pagination-for-large-datasets)
+- [Rate Limiting and Concurrency](#rate-limiting-and-concurrency)
+  - [SDK Queue Middleware](#sdk-queue-middleware)
+  - [Bulk Import Throttling](#bulk-import-throttling)
+  - [Retry with Exponential Backoff](#retry-with-exponential-backoff)
+- [Document Size](#document-size)
+  - [Keep Resources Under Size Limits](#keep-resources-under-size-limits)
+- [Caching Strategies](#caching-strategies)
+  - [Cache Slow-Changing Data](#cache-slow-changing-data)
+  - [Use Subscriptions for Cache Invalidation](#use-subscriptions-for-cache-invalidation)
+- [Locale Projection](#locale-projection)
+- [Parallel API Calls](#parallel-api-calls)
+- [Performance Checklist](#performance-checklist)
+
 ## N+1 Query Pattern
 
 The most common performance problem in commercetools integrations.

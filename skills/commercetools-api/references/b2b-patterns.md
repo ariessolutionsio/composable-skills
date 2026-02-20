@@ -2,6 +2,24 @@
 
 commercetools B2B features revolve around Business Units, Associate Roles, Approval Rules, and Quotes. These features model real-world organizational hierarchies with permission-based access control. Getting the hierarchy design wrong early is extremely costly to fix because approval workflows, catalog visibility, and pricing all depend on the Business Unit structure.
 
+## Table of Contents
+- [Business Unit Hierarchy](#business-unit-hierarchy)
+  - [Creating a Company](#creating-a-company)
+  - [Creating Divisions](#creating-divisions)
+  - [Inheritance Modes](#inheritance-modes)
+- [Associate Roles and Permissions](#associate-roles-and-permissions)
+  - [Creating Roles](#creating-roles)
+  - [Adding Associates to a Business Unit](#adding-associates-to-a-business-unit)
+  - [Security: Associate Endpoints](#security-associate-endpoints)
+- [Associate-Scoped Operations](#associate-scoped-operations)
+- [Approval Rules](#approval-rules)
+  - [Creating an Approval Rule](#creating-an-approval-rule)
+  - [Multi-Tier Approval](#multi-tier-approval)
+  - [Approval Rule Constraints](#approval-rule-constraints)
+- [Quote Lifecycle (B2B Negotiation)](#quote-lifecycle-b2b-negotiation)
+  - [Quote Constraints](#quote-constraints)
+- [Checklist](#checklist)
+
 ## Business Unit Hierarchy
 
 Business Units are organized in a tree with Companies at the top and Divisions as children. Maximum 5 levels deep, maximum 2,000 associates per unit.

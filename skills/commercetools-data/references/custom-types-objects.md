@@ -4,6 +4,23 @@
 
 commercetools provides two distinct extensibility mechanisms for custom data, and confusing them is one of the most common mistakes in implementations. Using the wrong one puts data in unreachable places and creates architectural debt that is expensive to unwind.
 
+## Table of Contents
+- [The Core Distinction](#the-core-distinction)
+- [The One-Type-Per-Resource Constraint](#the-one-type-per-resource-constraint)
+- [Custom Type Field Definitions](#custom-type-field-definitions)
+  - [Supported Field Types](#supported-field-types)
+  - [Field Definition Constraints](#field-definition-constraints)
+  - [Applicable Resource Types](#applicable-resource-types)
+- [The Field Type Change Trap](#the-field-type-change-trap)
+- [Custom Objects: When and How](#custom-objects-when-and-how)
+  - [Good Use Cases for Custom Objects](#good-use-cases-for-custom-objects)
+  - [Custom Object CRUD](#custom-object-crud)
+  - [Custom Object Key and Container Constraints](#custom-object-key-and-container-constraints)
+  - [Custom Object Pitfalls](#custom-object-pitfalls)
+- [Custom Types on Resources: Complete Example](#custom-types-on-resources-complete-example)
+- [Decision Checklist](#decision-checklist)
+- [Reference](#reference)
+
 ## The Core Distinction
 
 | | Custom Types (Custom Fields) | Custom Objects |
@@ -325,29 +342,8 @@ const sizeLookup: CustomObjectDraft = {
   },
 };
 
-// 3. Sync tracking metadata
-const syncState: CustomObjectDraft = {
-  container: 'erp-sync',
-  key: 'last-product-sync',
-  value: {
-    lastSyncTimestamp: '2025-12-01T10:30:00.000Z',
-    lastSyncedProductKey: 'product-abc-123',
-    recordsProcessed: 15420,
-    status: 'completed',
-  },
-};
-
-// 4. Feature flags
-const featureFlags: CustomObjectDraft = {
-  container: 'feature-flags',
-  key: 'storefront',
-  value: {
-    newCheckoutFlow: true,
-    enableProductRecommendations: false,
-    a11yImprovements: true,
-    betaSearchAlgorithm: false,
-  },
-};
+// Other good use cases: sync tracking metadata (erp-sync container),
+// feature flags (feature-flags container), cross-service config.
 ```
 
 ### Custom Object CRUD
@@ -413,9 +409,7 @@ const objectWithRef: CustomObjectDraft = {
   container: 'config',
   key: 'featured',
   value: {
-    productId: 'some-product-id',  // If this product is deleted,
-                                    // the reference becomes dangling.
-                                    // No cascade, no error, no warning.
+    productId: 'some-product-id',  // If deleted, reference dangles silently.
   },
 };
 // Always validate references in application code
@@ -469,38 +463,9 @@ const orderMetadataType: TypeDraft = {
 
 await apiRoot.types().post({ body: orderMetadataType }).execute();
 
-// Step 2: Set the Custom Type on an Order (first time -- use setCustomType)
-await apiRoot.orders().withId({ ID: orderId }).post({
-  body: {
-    version,
-    actions: [{
-      action: 'setCustomType',
-      type: { key: 'order-metadata', typeId: 'type' },
-      fields: {
-        'fulfillment-source': 'warehouse-east',
-      },
-    }],
-  },
-}).execute();
-
-// Step 3: Update individual fields (subsequent updates -- use setCustomField)
-await apiRoot.orders().withId({ ID: orderId }).post({
-  body: {
-    version: newVersion,
-    actions: [
-      {
-        action: 'setCustomField',
-        name: 'erp-orderNumber',
-        value: 'ERP-2025-00001234',
-      },
-      {
-        action: 'setCustomField',
-        name: 'erp-syncedAt',
-        value: new Date().toISOString(),
-      },
-    ],
-  },
-}).execute();
+// Steps 2-3: Set the type on an order with setCustomType (first time),
+// then update individual fields with setCustomField (see Composable Custom Type
+// pattern above for detailed examples of both actions).
 
 // Step 4: Query by custom field
 const syncedOrders = await apiRoot.orders().get({

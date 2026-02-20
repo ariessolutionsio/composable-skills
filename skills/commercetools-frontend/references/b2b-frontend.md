@@ -4,6 +4,22 @@
 
 Patterns extracted from the official FrontasticGmbH/scaffold-b2b launchpad repository.
 
+## Table of Contents
+- [Architecture: B2B Provider Layer](#architecture-b2b-provider-layer)
+- [Pattern 1: Permission-Gated UI](#pattern-1-permission-gated-ui)
+- [Pattern 2: Business Unit Selector](#pattern-2-business-unit-selector)
+- [Pattern 3: Quote Lifecycle](#pattern-3-quote-lifecycle)
+- [Pattern 4: Approval Workflows](#pattern-4-approval-workflows)
+- [Pattern 5: B2B Cart Differences](#pattern-5-b2b-cart-differences)
+- [Pattern 6: B2B Checkout Differences](#pattern-6-b2b-checkout-differences)
+- [Pattern 7: Quick Order (B2B Exclusive)](#pattern-7-quick-order-b2b-exclusive)
+- [Pattern 8: Purchase Lists (B2B Exclusive)](#pattern-8-purchase-lists-b2b-exclusive)
+- [Pattern 9: Company Admin Dashboard](#pattern-9-company-admin-dashboard)
+- [Pattern 10: Shared Components with B2B Props](#pattern-10-shared-components-with-b2b-props)
+- [Pattern 11: B2B Data Fetching](#pattern-11-b2b-data-fetching)
+- [B2B Frontend Checklist](#b2b-frontend-checklist)
+- [Reference](#reference)
+
 ## Architecture: B2B Provider Layer
 
 The B2B scaffold wraps the entire app in a `StoreAndBusinessUnitsProvider` that provides business unit and store context:

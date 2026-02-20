@@ -6,6 +6,21 @@
 
 This reference covers development patterns specific to **commercetools Frontend** -- the hosted frontend product (formerly Frontastic) that provides the Studio visual page builder for business users. If you are building a fully custom headless storefront with Next.js, see `storefront-architecture.md` instead -- but return here for the ct Frontend extension model.
 
+## Table of Contents
+- [Architecture Overview](#architecture-overview)
+- [Project Structure](#project-structure)
+- [Extension Registry](#extension-registry)
+  - [Pattern 1: The Extension Entry Point](#pattern-1-the-extension-entry-point)
+- [Data Source Extensions](#data-source-extensions)
+  - [Pattern 2: Registered Data Sources](#pattern-2-registered-data-sources)
+  - [Pattern 3: Data Source Schema for Studio](#pattern-3-data-source-schema-for-studio)
+- [Action Extensions](#action-extensions)
+  - [Pattern 4: Action Controller Architecture](#pattern-4-action-controller-architecture)
+  - [Pattern 5: Real Action Implementation](#pattern-5-real-action-implementation)
+  - [Pattern 6: Calling Actions from the Frontend SDK](#pattern-6-calling-actions-from-the-frontend-sdk)
+- [Dynamic Page Handlers](#dynamic-page-handlers)
+  - [Pattern 7: Resolving Product, Category, and Search URLs](#pattern-7-resolving-product-category-and-search-urls)
+
 ## Architecture Overview
 
 commercetools Frontend has four key layers:

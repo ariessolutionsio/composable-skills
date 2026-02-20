@@ -6,44 +6,18 @@ Patterns for querying, auditing catalog completeness, batch updating products, a
 
 This reference covers practical patterns for catalog maintenance tasks: finding products with missing data (slugs, descriptions, images), batch-updating products, and using AI to enrich product content. These operations use the commercetools HTTP API (not the Import API) because they target existing products with surgical updates rather than full resource replacement.
 
-## When to Use These Patterns
-
-- **Catalog audit:** "Do all products have slugs for all required locales?"
-- **Data completeness:** "Which products are missing descriptions?"
-- **Bulk enrichment:** "Generate SEO-friendly descriptions for products that lack them"
-- **Data cleanup:** "Normalize attribute values across the catalog"
-- **Locale expansion:** "Add French translations to all product names and descriptions"
+## Table of Contents
+- [API Client Setup](#api-client-setup)
+- [Pattern 1: Paginated Product Query](#pattern-1-paginated-product-query)
+- [Pattern 2: Find Products Missing Slugs](#pattern-2-find-products-missing-slugs)
+- [Pattern 3: Find Products Missing Descriptions](#pattern-3-find-products-missing-descriptions)
+- [Pattern 4: General Catalog Audit](#pattern-4-general-catalog-audit)
+- [Pattern 5: Batch Update Products](#pattern-5-batch-update-products)
+- [Pattern 6: Generate Missing Slugs](#pattern-6-generate-missing-slugs)
 
 ## API Client Setup
 
-All patterns use the commercetools Platform SDK v3:
-
-```typescript
-import { createApiBuilderFromCtpClient } from '@commercetools/platform-sdk';
-import { ClientBuilder } from '@commercetools/ts-client';
-
-const projectKey = process.env.CTP_PROJECT_KEY!;
-
-const client = new ClientBuilder()
-  .withProjectKey(projectKey)
-  .withClientCredentialsFlow({
-    host: 'https://auth.europe-west1.gcp.commercetools.com',
-    projectKey,
-    credentials: {
-      clientId: process.env.CTP_CLIENT_ID!,
-      clientSecret: process.env.CTP_CLIENT_SECRET!,
-    },
-    httpClient: fetch,
-  })
-  .withHttpMiddleware({
-    host: 'https://api.europe-west1.gcp.commercetools.com',
-    httpClient: fetch,
-  })
-  .build();
-
-const apiRoot = createApiBuilderFromCtpClient(client)
-  .withProjectKey({ projectKey });
-```
+Set up the commercetools `apiRoot` client using the patterns in the sibling `commercetools-api` skill's `references/sdk-setup.md`. All patterns below assume `apiRoot` is already configured.
 
 ## Pattern 1: Paginated Product Query
 

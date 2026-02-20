@@ -2,6 +2,26 @@
 
 The cart is the most heavily modified resource in any commercetools implementation. It accumulates line items, addresses, shipping methods, discounts, payment references, and tax data -- all of which interact with each other. Getting the lifecycle wrong causes price discrepancies, failed order creation, and payment inconsistencies that are extremely difficult to debug in production.
 
+## Table of Contents
+- [Cart Creation](#cart-creation)
+- [Setting the Store](#setting-the-store)
+- [Setting the Shipping Address Early](#setting-the-shipping-address-early)
+- [Line Item Operations](#line-item-operations)
+- [Discount Code Application](#discount-code-application)
+- [Shipping Method Selection](#shipping-method-selection)
+- [Cart Recalculation](#cart-recalculation)
+- [Freezing the Cart Before Payment](#freezing-the-cart-before-payment)
+- [Handling PriceChanged Errors](#handling-pricechanged-errors)
+- [Tax Mode Configuration](#tax-mode-configuration)
+  - [Platform Tax Mode (default)](#platform-tax-mode-default)
+  - [External Tax Mode](#external-tax-mode)
+- [Payment Flow](#payment-flow)
+  - [Creating Payment Resources](#creating-payment-resources)
+  - [Transaction Types and States](#transaction-types-and-states)
+  - [Payment Amount Validation](#payment-amount-validation)
+- [Complete Checkout Flow](#complete-checkout-flow)
+- [Checklist](#checklist)
+
 ## Cart Creation
 
 Always set currency and country at creation time. Set a shipping address early to enable tax and shipping calculation.
@@ -362,7 +382,6 @@ await apiRoot.carts().withId({ ID: cartId }).post({
 ## Payment Flow
 
 ### Creating Payment Resources
-
 **Anti-Pattern (reusing or deleting payments):**
 ```typescript
 // WRONG: Deleting a failed payment loses the audit trail
@@ -465,48 +484,7 @@ async function validatePaymentAmount(cartId: string, paymentAmount: number): Pro
 
 ## Complete Checkout Flow
 
-```typescript
-async function checkout(cartId: string): Promise<Order> {
-  // 1. Get the current cart
-  let cart = await apiRoot.carts().withId({ ID: cartId }).get().execute();
-
-  // 2. Validate completeness
-  if (!cart.body.shippingAddress) throw new Error('Shipping address required');
-  if (!cart.body.billingAddress) throw new Error('Billing address required');
-  if (!cart.body.shippingInfo) throw new Error('Shipping method required');
-  if (cart.body.lineItems.length === 0) throw new Error('Cart is empty');
-
-  // 3. Recalculate to ensure fresh prices
-  cart = await apiRoot.carts().withId({ ID: cartId }).post({
-    body: {
-      version: cart.body.version,
-      actions: [{ action: 'recalculate', updateProductData: true }],
-    },
-  }).execute();
-
-  // 4. Freeze the cart
-  const frozen = await apiRoot.carts().withId({ ID: cartId }).post({
-    body: {
-      version: cart.body.version,
-      actions: [{ action: 'freezeCart' }],
-    },
-  }).execute();
-
-  // 5. Process payment (PSP-specific logic)
-  // ...
-
-  // 6. Create order
-  const order = await apiRoot.orders().post({
-    body: {
-      cart: { id: frozen.body.id, typeId: 'cart' },
-      version: frozen.body.version,
-      orderNumber: generateOrderNumber(),
-    },
-  }).execute();
-
-  return order.body;
-}
-```
+Validate cart completeness, recalculate prices, freeze the cart, process payment, and create the order.
 
 ## Checklist
 
@@ -519,5 +497,4 @@ async function checkout(cartId: string): Promise<Order> {
 - [ ] Failed payments are never deleted from the cart
 - [ ] Payment amount is validated against cart total at each step
 - [ ] External tax rates are set on ALL line items, custom line items, and shipping
-- [ ] Update actions are batched into single requests
-- [ ] Cart recalculation is triggered after external changes
+- [ ] Update actions are batched and cart recalculation is triggered after external changes

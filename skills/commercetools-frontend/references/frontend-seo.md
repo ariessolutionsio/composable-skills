@@ -4,6 +4,17 @@ SEO patterns including structured data (JSON-LD), meta tags, dynamic XML sitemap
 
 **Impact: HIGH -- Missing structured data means no rich results. Proper SEO implementation drives organic traffic and visibility for commerce storefronts.**
 
+## Table of Contents
+- [SEO Optimization](#seo-optimization)
+  - [Pattern 7: Product Structured Data (JSON-LD)](#pattern-7-product-structured-data-json-ld)
+  - [Pattern 8: Meta Tags for Product and Category Pages](#pattern-8-meta-tags-for-product-and-category-pages)
+  - [Pattern 9: Dynamic XML Sitemap](#pattern-9-dynamic-xml-sitemap)
+  - [Pattern 10: Canonical URLs and hreflang for Multi-Locale](#pattern-10-canonical-urls-and-hreflang-for-multi-locale)
+- [Performance & SEO Checklist](#performance--seo-checklist)
+  - [Performance](#performance)
+  - [SEO](#seo)
+- [Reference](#reference)
+
 ## SEO Optimization
 
 ### Pattern 7: Product Structured Data (JSON-LD)

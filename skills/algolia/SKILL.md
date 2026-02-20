@@ -8,10 +8,6 @@ description: >
   Triggers on tasks involving Algolia, InstantSearch, search index, facets,
   ranking, relevance, product search, search UI, autocomplete, search
   analytics, synonyms, rules, commercetools Algolia sync. Coming soon.
-license: MIT
-metadata:
-  author: ariessolutionsio
-  version: "0.1.0"
 ---
 
 # Algolia Commerce Search

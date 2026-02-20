@@ -2,6 +2,25 @@
 
 Customers in commercetools hold authentication credentials, addresses, group memberships, and custom fields. The API supports up to 10,000,000 customers per project. Getting authentication flows, email verification, and customer scoping wrong leads to security vulnerabilities, broken login, and data isolation failures.
 
+## Table of Contents
+- [Customer Creation](#customer-creation)
+- [Customer Authentication](#customer-authentication)
+  - [Login](#login)
+  - [Login with Anonymous Cart Merge](#login-with-anonymous-cart-merge)
+  - [Authentication Modes](#authentication-modes)
+- [Email Verification Flow](#email-verification-flow)
+- [Password Management](#password-management)
+  - [Password Reset Flow](#password-reset-flow)
+  - [Password Change (Authenticated)](#password-change-authenticated)
+- [Customer Groups](#customer-groups)
+  - [Multiple Group Assignments](#multiple-group-assignments)
+- [Address Management](#address-management)
+- [Custom Fields on Customers](#custom-fields-on-customers)
+- [Store-Scoped Customers](#store-scoped-customers)
+- [Querying Customers](#querying-customers)
+- [Anonymous-to-Customer Conversion](#anonymous-to-customer-conversion)
+- [Checklist](#checklist)
+
 ## Customer Creation
 
 ```typescript

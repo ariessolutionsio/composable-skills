@@ -2,6 +2,20 @@
 
 commercetools provides three ways to retrieve products: the Query API (real-time, not optimized for search), the Product Projection Search (legacy search), and the Product Search API (recommended). Using the wrong API for your use case causes 10-100x performance degradation on large catalogs.
 
+## Table of Contents
+- [When to Use Which API](#when-to-use-which-api)
+- [Product Search API (Recommended)](#product-search-api-recommended)
+  - [Full-Text Search with Filters and Facets](#full-text-search-with-filters-and-facets)
+  - [Fetching Full Product Data After Search](#fetching-full-product-data-after-search)
+- [Product Projection Search (Legacy)](#product-projection-search-legacy)
+  - [filter vs filter.query vs filter.facets](#filter-vs-filterquery-vs-filterfacets)
+- [Search Performance Optimization](#search-performance-optimization)
+  - [Reduce Faceting Attributes](#reduce-faceting-attributes)
+  - [Category Navigation](#category-navigation)
+- [GraphQL for Precise Data Fetching](#graphql-for-precise-data-fetching)
+- [Product Projections Query (for Back-Office)](#product-projections-query-for-back-office)
+- [Checklist](#checklist)
+
 ## When to Use Which API
 
 | API | Use Case | Performance | Real-Time |
