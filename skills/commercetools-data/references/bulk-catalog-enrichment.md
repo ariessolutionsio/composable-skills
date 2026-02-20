@@ -2,6 +2,43 @@
 
 Patterns for AI-assisted product descriptions, SEO metadata generation, attribute normalization, MCP usage, and publishing changes in commercetools.
 
+## Shared Utilities
+
+This file depends on the following utilities. These are defined in `bulk-catalog-audit.md`. If using both files together, load the audit file for the full implementations.
+
+```typescript
+// Paginates through all products using cursor-based pagination.
+declare function iterateAllProducts(options?: {
+  where?: string[];
+  expand?: string[];
+  staged?: boolean;
+  limit?: number;
+}): AsyncGenerator<ProductProjection>;
+
+// Applies batched update actions with retry on ConcurrentModification (409).
+declare function batchUpdateProducts(
+  updates: ProductUpdate[],
+  options?: { concurrency?: number; retries?: number; delayMs?: number }
+): Promise<{ succeeded: number; failed: number; errors: string[] }>;
+
+// The shape of each update passed to batchUpdateProducts.
+interface ProductUpdate {
+  productId: string;
+  version: number;
+  actions: ProductUpdateAction[];
+}
+```
+
+## Table of Contents
+- [Pattern 7: AI-Assisted Description Generation](#pattern-7-ai-assisted-description-generation)
+- [Pattern 8: AI-Assisted SEO Metadata](#pattern-8-ai-assisted-seo-metadata)
+- [Pattern 9: Bulk Attribute Value Normalization](#pattern-9-bulk-attribute-value-normalization)
+- [Using MCP for Catalog Operations](#using-mcp-for-catalog-operations)
+- [Publishing Changes](#publishing-changes)
+- [Important Constraints](#important-constraints)
+- [Checklist: Bulk Operations](#checklist-bulk-operations)
+- [Reference](#reference)
+
 ## Pattern 7: AI-Assisted Description Generation
 
 Use an LLM to generate product descriptions from existing product data (name, attributes, categories). This pattern works with any AI provider (Claude, OpenAI, etc.).
@@ -58,7 +95,7 @@ async function generateDescription(
   }
 
   const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-5-20250929',
+    model: 'latest', // use the latest Claude model available
     max_tokens: 1024,
     messages: [{
       role: 'user',
@@ -173,7 +210,7 @@ async function enrichSEOMetadata(
 
     try {
       const message = await anthropic.messages.create({
-        model: 'claude-sonnet-4-5-20250929',
+        model: 'latest', // use the latest Claude model available
         max_tokens: 512,
         messages: [{
           role: 'user',

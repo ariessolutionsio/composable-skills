@@ -4,6 +4,13 @@ Search API integration, server components, faceted filter UI, and ProductListPro
 
 **Impact: HIGH -- Over-fetching, N+1 queries, and missing variant logic directly impact conversion rates and page speed**
 
+## Table of Contents
+- [Product Listing Page (PLP) Patterns](#product-listing-page-plp-patterns)
+  - [Pattern 1: Using Product Search API (Not Product Projections Query)](#pattern-1-using-product-search-api-not-product-projections-query)
+  - [Pattern 2: PLP Server Component](#pattern-2-plp-server-component)
+  - [Pattern 3: Faceted Filter UI (Client Component)](#pattern-3-faceted-filter-ui-client-component)
+  - [Pattern 3b: ProductListProvider Context (scaffold)](#pattern-3b-productlistprovider-context-scaffold)
+
 ## Product Listing Page (PLP) Patterns
 
 ### Pattern 1: Using Product Search API (Not Product Projections Query)
@@ -160,9 +167,9 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   });
 
   return (
-    <div className="flex gap-8">
+    <div>
       <FacetSidebar facets={facets} activeFilters={filters} />
-      <div className="flex-1">
+      <div>
         <h1>{category.name[params.locale]}</h1>
         <p>{total} products</p>
         <ProductGrid products={products} locale={params.locale} />
@@ -221,7 +228,7 @@ export function FacetSidebar({ facets, activeFilters }: Props) {
   );
 
   return (
-    <aside className="w-64 space-y-6">
+    <aside>
       {Object.entries(facets).map(([key, facet]) => {
         // Extract attribute name from facet key
         const attrName = key.replace('variants.attributes.', '').replace('.key', '');
@@ -229,18 +236,18 @@ export function FacetSidebar({ facets, activeFilters }: Props) {
 
         return (
           <div key={key}>
-            <h3 className="font-semibold capitalize">{attrName}</h3>
-            <ul className="space-y-1 mt-2">
+            <h3>{attrName}</h3>
+            <ul>
               {facet.terms.map((term) => (
                 <li key={term.term}>
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <label>
                     <input
                       type="checkbox"
                       checked={activeFacet.includes(term.term)}
                       onChange={() => toggleFilter(attrName, term.term)}
                     />
                     <span>{term.term}</span>
-                    <span className="text-gray-400 text-sm">({term.count})</span>
+                    <span>({term.count})</span>
                   </label>
                 </li>
               ))}
@@ -253,7 +260,7 @@ export function FacetSidebar({ facets, activeFilters }: Props) {
 }
 ```
 
-### Pattern 3b: ProductListProvider Context (Official Scaffold Pattern)
+### Pattern 3b: ProductListProvider Context (scaffold)
 
 > From the official `scaffold-b2c` repo: The scaffold uses a dedicated React Context to manage the full filter/sort/pagination state, with URL-driven refinements applied via `router.push`.
 

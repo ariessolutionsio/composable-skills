@@ -2,6 +2,41 @@
 
 Merchant Center customizations are Single-Page Applications that you build, host, and manage yourself. commercetools provides the build tooling (`mc-scripts`) and a registration system in the Merchant Center, but you choose the hosting platform.
 
+## Table of Contents
+- [mc-scripts CLI Reference](#mc-scripts-cli-reference)
+  - [mc-scripts login Options](#mc-scripts-login-options)
+  - [mc-scripts config:sync:ci Options](#mc-scripts-configsyncci-options)
+  - [Dotenv File Loading Order](#dotenv-file-loading-order)
+- [Deployment Workflow Overview](#deployment-workflow-overview)
+- [Application Registration & States](#application-registration--states)
+  - [Application States](#application-states)
+  - [Installation](#installation)
+- [Deploying to Static Hosting (Vercel, Netlify)](#deploying-to-static-hosting-vercel-netlify)
+  - [Platform Comparison](#platform-comparison)
+  - [Static Hosting Common Steps](#static-hosting-common-steps)
+  - [Netlify SPA Redirect Requirement](#netlify-spa-redirect-requirement)
+  - [Static Hosting Incorrect Patterns](#static-hosting-incorrect-patterns)
+- [Deploying to commercetools Connect](#deploying-to-commercetools-connect)
+  - [connect.yaml Structure](#connectyaml-structure)
+  - [Connect-Specific Rules](#connect-specific-rules)
+  - [Connect Incorrect Patterns](#connect-incorrect-patterns)
+- [Deploying to AWS (S3 + CloudFront)](#deploying-to-aws-s3--cloudfront)
+  - [High-Level Steps](#high-level-steps)
+  - [CloudFront Error Page Configuration](#cloudfront-error-page-configuration)
+- [Other Hosting Platforms](#other-hosting-platforms)
+- [Content Security Policy (CSP)](#content-security-policy-csp)
+- [Testing Custom Applications](#testing-custom-applications)
+  - [Test Setup](#test-setup)
+  - [Testing with renderApp](#testing-with-renderapp)
+  - [Testing Permission Mappings](#testing-permission-mappings)
+  - [Testing GraphQL Queries](#testing-graphql-queries)
+  - [Cypress Integration Testing](#cypress-integration-testing)
+- [Deployment Previews](#deployment-previews)
+  - [Setup](#setup)
+- [Checklist: Deployment](#checklist-deployment)
+- [Checklist: Testing](#checklist-testing)
+- [Reference](#reference)
+
 ## mc-scripts CLI Reference
 
 The `@commercetools-frontend/mc-scripts` package provides all build and deployment tooling.
@@ -101,19 +136,26 @@ After moving to Ready state:
 3. Install the customization
 4. Assign permissions to Teams
 
-## Deploying to Vercel
+## Deploying to Static Hosting (Vercel, Netlify)
 
-### Step-by-Step
+Both Vercel and Netlify work well for MC customizations. The setup is nearly identical.
 
-1. **Connect your repository** to Vercel using the GitHub integration
+### Platform Comparison
 
-2. **Configure build settings:**
-   - Framework Preset: **Create React App**
-   - Build Command: `yarn build`
-   - Output Directory: `public`
-   - Node.js Version: 18 or higher (20 recommended)
+| Setting | Vercel | Netlify |
+|---------|--------|---------|
+| Framework Preset | Create React App | (none needed) |
+| Build Command | `yarn build` | `yarn build` |
+| Output Directory | `public` | `public` |
+| Node.js Version | 18+ (20 recommended) | 18+ |
+| SPA Routing | Automatic with CRA preset | **Manual** -- requires `_redirects` file (see below) |
+| Auto-deploy on push | Yes | Yes |
 
-3. **Set environment variables** in Vercel project settings:
+### Static Hosting Common Steps
+
+1. **Connect your repository** via the platform's GitHub integration
+2. **Configure build settings** per the table above (build command: `yarn build`, output: `public`)
+3. **Set environment variables** in platform settings:
 
 ```
 CUSTOM_APPLICATION_ID=<your-application-id>     # or CUSTOM_VIEW_ID for views
@@ -123,33 +165,30 @@ CLOUD_IDENTIFIER=gcp-eu                          # or your region
 CTP_PROJECT_KEY=my-project
 ```
 
-4. **Update your config** to use environment variable placeholders:
+4. **Update your config** to use environment variable placeholders (see the `custom-application-config.mjs` example in [custom-applications.md](./custom-applications.md#configuration-file))
+5. **Deploy** and **update MC registration** with the production URL; move state to Ready
 
-```javascript
-// custom-application-config.mjs
-const config = {
-  entryPointUriPath: '${env:ENTRY_POINT_URI_PATH}',
-  cloudIdentifier: '${env:CLOUD_IDENTIFIER}',
-  env: {
-    production: {
-      applicationId: '${env:CUSTOM_APPLICATION_ID}',
-      url: '${env:APPLICATION_URL}',
-    },
-  },
-};
+### Netlify SPA Redirect Requirement
+
+Netlify does **not** automatically route unknown paths to `index.html`. Without this, direct navigation to `/:projectKey/:entryPointUriPath/some-id` returns a 404.
+
+```
+# public/_redirects  (REQUIRED for Netlify)
+/*    /index.html   200
 ```
 
-5. **Deploy** -- Vercel auto-deploys on push to main branch
+Or equivalently in `netlify.toml`:
 
-6. **Update MC registration** with the Vercel URL and move to Ready state
+```toml
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+```
 
-### Vercel Incorrect Patterns
+### Static Hosting Incorrect Patterns
 
 ```javascript
-// WRONG: Using default Vercel build settings
-// Vercel defaults may not use mc-scripts build
-// Always override Build Command to: yarn build
-
 // WRONG: Output directory set to 'build'
 // MC applications output to 'public', not 'build'
 
@@ -164,85 +203,30 @@ const config = {
 };
 ```
 
-## Deploying to Netlify
-
-### Step-by-Step
-
-1. **Connect your repository** to Netlify using the GitHub integration
-
-2. **Configure build settings:**
-   - Build Command: `yarn build`
-   - Publish Directory: `public`
-
-3. **Add SPA redirect rule** -- this is critical. Without it, client-side routes return 404:
-
-```
-# public/_redirects
-/*    /index.html   200
-```
-
-Or in `netlify.toml`:
-
-```toml
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-```
-
-4. **Set environment variables** in Netlify site settings (same as Vercel)
-
-5. **Deploy** and update MC registration
-
-### Netlify Critical Mistake
-
-```
-# WRONG: Missing SPA redirects
-# Without this file, navigating directly to /:projectKey/:entryPointUriPath/some-id
-# returns a 404 because Netlify looks for a physical file at that path
-
-# CORRECT: Always add _redirects or netlify.toml with SPA rewrite
-# public/_redirects
-/*    /index.html   200
-```
-
 ## Deploying to commercetools Connect
 
 Connect is commercetools' own hosting platform. It handles deployment infrastructure and provides the application URL automatically.
 
-### connect.yaml for Custom Applications
+### connect.yaml Structure
+
+The YAML structure is the same for both Custom Applications and Custom Views. Adjust `name`, `applicationType`, and the ID key as noted below.
 
 ```yaml
 deployAs:
-  - name: my-custom-application
+  - name: my-custom-application            # or my-custom-view
     applicationType: merchant-center-custom-application
+    # For Custom Views use: merchant-center-custom-view
     configuration:
       standardConfiguration:
-        - key: CUSTOM_APPLICATION_ID
-          description: The Custom Application ID
+        - key: CUSTOM_APPLICATION_ID       # For Custom Views use: CUSTOM_VIEW_ID
+          description: The Application/View ID
           required: true
         - key: CLOUD_IDENTIFIER
           description: The cloud identifier (e.g., gcp-eu)
           default: 'gcp-eu'
-        - key: ENTRY_POINT_URI_PATH
+        - key: ENTRY_POINT_URI_PATH        # Only needed for Custom Applications
           description: The application entry point URI path
           required: true
-```
-
-### connect.yaml for Custom Views
-
-```yaml
-deployAs:
-  - name: my-custom-view
-    applicationType: merchant-center-custom-view
-    configuration:
-      standardConfiguration:
-        - key: CUSTOM_VIEW_ID
-          description: The Custom View ID
-          required: true
-        - key: CLOUD_IDENTIFIER
-          description: The cloud identifier (e.g., gcp-eu)
-          default: 'gcp-eu'
 ```
 
 ### Connect-Specific Rules
@@ -356,59 +340,20 @@ module.exports = {
 
 ```tsx
 import { renderApp } from '@commercetools-frontend/application-shell/test-utils';
-import { mapResourceAccessToAppliedPermissions } from '@commercetools-frontend/application-shell/test-utils';
-import { entryPointUriPath, PERMISSIONS } from '../constants';
+import { entryPointUriPath } from '../constants';
 import MyComponent from './my-component';
 
-describe('MyComponent', () => {
-  it('renders with view permissions', () => {
-    const rendered = renderApp(<MyComponent />, {
-      route: `/${entryPointUriPath}`,
-      permissions: {
-        canView: true,
-        canManage: false,
-      },
-      environment: {
-        entryPointUriPath,
-      },
-    });
-
-    expect(rendered.getByText('My Resource List')).toBeInTheDocument();
+it('renders with view permissions', () => {
+  const rendered = renderApp(<MyComponent />, {
+    route: `/${entryPointUriPath}`,
+    permissions: { canView: true, canManage: false },
+    environment: { entryPointUriPath },
   });
-
-  it('shows unauthorized page without permissions', () => {
-    const rendered = renderApp(<MyComponent />, {
-      route: `/${entryPointUriPath}/new`,
-      permissions: {
-        canView: true,
-        canManage: false,
-      },
-    });
-
-    expect(rendered.getByText('Unauthorized')).toBeInTheDocument();
-  });
+  expect(rendered.getByText('My Resource List')).toBeInTheDocument();
 });
 ```
 
-### Testing Custom Views
-
-```tsx
-import { renderCustomView } from '@commercetools-frontend/application-shell/test-utils';
-import MyView from './my-view';
-
-describe('MyView', () => {
-  it('renders the custom view', () => {
-    const rendered = renderCustomView(<MyView />, {
-      permissions: {
-        canView: true,
-      },
-      hostUrl: '/my-project/orders/order-123',
-    });
-
-    expect(rendered.getByText('Order Details')).toBeInTheDocument();
-  });
-});
-```
+For Custom Views, use `renderCustomView` instead of `renderApp`. It accepts the same options plus a `hostUrl` property (e.g., `hostUrl: '/my-project/orders/order-123'`).
 
 ### Testing Permission Mappings
 
@@ -418,68 +363,33 @@ import {
   denormalizePermissions,
 } from '@commercetools-frontend/application-shell/test-utils';
 
-// Map resource access to the permission format expected by test utilities
 const permissions = mapResourceAccessToAppliedPermissions(
   [PERMISSIONS.View, PERMISSIONS.Manage],
   ['view', 'manage']
 );
-
-// Use denormalizePermissions for more complex permission setups
-const appliedPermissions = denormalizePermissions({
-  ViewMyCustomApp: true,
-  ManageMyCustomApp: true,
-  ViewMyCustomAppDelivery: false,
-});
 ```
+
+`denormalizePermissions` is available for more complex permission setups (e.g., `{ ViewMyCustomApp: true, ManageMyCustomApp: true }`).
 
 ### Testing GraphQL Queries
 
-Mock GraphQL responses in tests:
+Pass `mocks` to `renderApp` to supply Apollo MockedProvider responses:
 
 ```tsx
-import { renderApp } from '@commercetools-frontend/application-shell/test-utils';
-import { screen, waitFor } from '@testing-library/react';
-
-const mockChannels = {
-  channels: {
-    results: [
-      { id: '1', key: 'channel-1', nameAllLocales: [{ locale: 'en', value: 'Channel 1' }] },
-    ],
-    total: 1,
-  },
-};
-
-it('displays fetched channels', async () => {
-  renderApp(<ChannelList />, {
-    mocks: [
-      {
-        request: {
-          query: FetchChannelsQuery,
-          variables: { limit: 20, offset: 0 },
-        },
-        result: { data: mockChannels },
-      },
-    ],
-  });
-
-  await waitFor(() => {
-    expect(screen.getByText('Channel 1')).toBeInTheDocument();
-  });
+renderApp(<ChannelList />, {
+  mocks: [
+    {
+      request: { query: FetchChannelsQuery, variables: { limit: 20, offset: 0 } },
+      result: { data: { channels: { results: [{ id: '1', key: 'ch-1' }], total: 1 } } },
+    },
+  ],
 });
+await waitFor(() => expect(screen.getByText('ch-1')).toBeInTheDocument());
 ```
 
 ### Cypress Integration Testing
 
-The MC SDK provides a Cypress preset:
-
-```json
-// package.json
-{
-  "devDependencies": {
-    "@commercetools-frontend/cypress": "^22.0.0"
-  }
-}
-```
+The MC SDK provides a Cypress preset: `@commercetools-frontend/cypress` (add to `devDependencies`).
 
 ## Deployment Previews
 

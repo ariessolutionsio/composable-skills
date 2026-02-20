@@ -2,6 +2,23 @@
 
 The commercetools TypeScript SDK (`@commercetools/ts-client` v3 + `@commercetools/platform-sdk`) is the recommended way to interact with the API. Getting client setup wrong causes auth failures, memory leaks, and subtle concurrency bugs that only surface under production load.
 
+## Table of Contents
+- [Required Packages](#required-packages)
+- [Client Credentials Flow (Server-Side)](#client-credentials-flow-server-side)
+- [Singleton Client Pattern](#singleton-client-pattern)
+- [Password Flow (Customer Authentication)](#password-flow-customer-authentication)
+- [Anonymous Session Flow](#anonymous-session-flow)
+- [Production Middleware Stack](#production-middleware-stack)
+  - [HTTP Retry Configuration](#http-retry-configuration)
+  - [Concurrent Modification Middleware](#concurrent-modification-middleware)
+  - [Queue Middleware (Request Throttling)](#queue-middleware-request-throttling)
+  - [Correlation ID Middleware](#correlation-id-middleware)
+- [Optimistic Concurrency Control](#optimistic-concurrency-control)
+- [Batching Update Actions](#batching-update-actions)
+- [GraphQL via the SDK](#graphql-via-the-sdk)
+- [Region-Specific Endpoints](#region-specific-endpoints)
+- [Checklist](#checklist)
+
 ## Required Packages
 
 ```bash

@@ -6,9 +6,19 @@ Cart state management with SWR hooks, cost calculation, line item display, cart 
 
 Cart and checkout are the most stateful, interactive parts of a commerce storefront. These patterns cover cart state management, optimistic updates, checkout flow UI, and integration with commercetools Checkout (the hosted checkout product).
 
+## Table of Contents
+- [Cart State Management](#cart-state-management)
+  - [Pattern 1: SWR-Based Cart Hook (scaffold)](#pattern-1-swr-based-cart-hook-scaffold)
+  - [Pattern 2: Cart Cost Calculation with mapCosts (scaffold)](#pattern-2-cart-cost-calculation-with-mapcosts-scaffold)
+  - [Pattern 3: Cart Line Item Display](#pattern-3-cart-line-item-display)
+  - [Pattern 4: Cart Summary with Discount Codes](#pattern-4-cart-summary-with-discount-codes)
+  - [Pattern 5: Move to Wishlist from Cart (scaffold)](#pattern-5-move-to-wishlist-from-cart-scaffold)
+- [Wishlist Patterns](#wishlist-patterns)
+  - [Pattern 6: Wishlist with SWR Optimistic Updates (scaffold)](#pattern-6-wishlist-with-swr-optimistic-updates-scaffold)
+
 ## Cart State Management
 
-### Pattern 1: SWR-Based Cart Hook (from the official scaffold repos)
+### Pattern 1: SWR-Based Cart Hook (scaffold)
 
 The official commercetools Frontend scaffold uses SWR for cart state management. SWR provides automatic revalidation, deduplication, and built-in optimistic update support via `mutate`. Every cart mutation calls the SDK extension, then updates the SWR cache with the server response. This is the pattern from `frontastic/hooks/useCart/index.ts`.
 
@@ -144,7 +154,7 @@ const useCart = (): UseCartReturn => {
 
 For a custom Next.js App Router project (not using the commercetools Frontend scaffold), the same principle applies but with a `useReducer`-based Context. The key pattern: dispatch an optimistic action immediately, fire the API call, then dispatch `SET_CART` with the server response. On error, refetch the cart to reconcile.
 
-### Pattern 2: Cart Cost Calculation with mapCosts (from the official scaffold repos)
+### Pattern 2: Cart Cost Calculation with mapCosts (scaffold)
 
 The scaffold computes all cart cost breakdowns in a pure helper function. This avoids duplicating cost math across components and handles edge cases like gift line items, included-in-price taxes, and cart-level discounts.
 
@@ -239,26 +249,26 @@ export function CartLineItem({ lineItem, locale }: { lineItem: LineItem; locale:
   const unitPrice = lineItem.price.discounted ? lineItem.price.discounted.value : lineItem.price.value;
 
   return (
-    <div className="flex gap-4 py-4 border-b">
+    <div>
       {image && (
-        <div className="relative w-20 h-20 flex-shrink-0">
-          <Image src={image.url} alt={image.label || name} fill sizes="80px" className="object-cover rounded" />
+        <div>
+          <Image src={image.url} alt={image.label || name} fill sizes="80px" />
         </div>
       )}
-      <div className="flex-1">
-        <h3 className="font-medium">{name}</h3>
+      <div>
+        <h3>{name}</h3>
         {lineItem.variant?.attributes?.map((attr) => (
-          <p key={attr.name} className="text-sm text-gray-500 capitalize">
+          <p key={attr.name}>
             {attr.name}: {typeof attr.value === 'object' ? attr.value.label || attr.value.key : attr.value}
           </p>
         ))}
-        <p className="text-sm mt-1">{formatPrice(unitPrice.centAmount, unitPrice.currencyCode, locale)} each</p>
-        {lineItem.discountedPricePerQuantity.length > 0 && <p className="text-sm text-green-600">Discount applied</p>}
+        <p>{formatPrice(unitPrice.centAmount, unitPrice.currencyCode, locale)} each</p>
+        {lineItem.discountedPricePerQuantity.length > 0 && <p>Discount applied</p>}
       </div>
-      <div className="flex flex-col items-end gap-2">
+      <div>
         <QuantitySelector value={effectiveQuantity} onChange={(qty) => updateQuantity(lineItem.id, qty)} min={1} max={99} />
-        <p className="font-medium">{formatPrice(lineTotal.centAmount, lineTotal.currencyCode, locale)}</p>
-        <button onClick={() => removeItem(lineItem.id)} className="text-sm text-red-600 hover:underline">Remove</button>
+        <p>{formatPrice(lineTotal.centAmount, lineTotal.currencyCode, locale)}</p>
+        <button onClick={() => removeItem(lineItem.id)}>Remove</button>
       </div>
     </div>
   );
@@ -306,31 +316,31 @@ export function CartSummary({ cart, locale }: { cart: Cart; locale: string }) {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between"><span>Subtotal</span><span>{formatPrice(subtotal, currency, locale)}</span></div>
+    <div>
+      <div><span>Subtotal</span><span>{formatPrice(subtotal, currency, locale)}</span></div>
       {cart.shippingInfo && (
-        <div className="flex justify-between"><span>Shipping</span><span>{formatPrice(cart.shippingInfo.price.centAmount, currency, locale)}</span></div>
+        <div><span>Shipping</span><span>{formatPrice(cart.shippingInfo.price.centAmount, currency, locale)}</span></div>
       )}
       {cart.taxedPrice && (
-        <div className="flex justify-between text-sm text-gray-500"><span>Tax</span><span>{formatPrice(cart.taxedPrice.totalTax?.centAmount || 0, currency, locale)}</span></div>
+        <div><span>Tax</span><span>{formatPrice(cart.taxedPrice.totalTax?.centAmount || 0, currency, locale)}</span></div>
       )}
       {cart.discountCodes.map((dc) => (
-        <div key={dc.discountCode.id} className="flex justify-between text-green-600 text-sm">
+        <div key={dc.discountCode.id}>
           <span>Code: {dc.discountCode.obj?.code || 'Applied'}</span><span>{dc.state}</span>
         </div>
       ))}
-      <div className="flex gap-2">
-        <input type="text" value={promoCode} onChange={(e) => setPromoCode(e.target.value)} placeholder="Promo code" className="flex-1 border rounded px-3 py-2 text-sm" />
-        <button onClick={handleApplyPromo} disabled={!promoCode || applying} className="px-4 py-2 bg-gray-900 text-white text-sm rounded disabled:opacity-50">Apply</button>
+      <div>
+        <input type="text" value={promoCode} onChange={(e) => setPromoCode(e.target.value)} placeholder="Promo code" />
+        <button onClick={handleApplyPromo} disabled={!promoCode || applying}>Apply</button>
       </div>
-      {promoError && <p className="text-red-600 text-sm">{promoError}</p>}
-      <div className="flex justify-between font-bold text-lg border-t pt-4"><span>Total</span><span>{formatPrice(cart.totalPrice.centAmount, currency, locale)}</span></div>
+      {promoError && <p>{promoError}</p>}
+      <div><span>Total</span><span>{formatPrice(cart.totalPrice.centAmount, currency, locale)}</span></div>
     </div>
   );
 }
 ```
 
-### Pattern 5: Move to Wishlist from Cart (from the official scaffold repos)
+### Pattern 5: Move to Wishlist from Cart (scaffold)
 
 The scaffold wires up a "move to wishlist" action in the cart tastic. This removes the item from the cart and adds it to the wishlist in parallel using `Promise.all`, avoiding sequential waits.
 
@@ -372,5 +382,63 @@ const CartTastic = ({ data }: TasticProps<CartTasticData>) => {
       onRemoveDiscount={removeDiscountCode}
     />
   );
+};
+```
+
+## Wishlist Patterns
+
+### Pattern 6: Wishlist with SWR Optimistic Updates (scaffold)
+
+The scaffold manages wishlists with SWR and uses its optimistic update API (`optimisticData` + `rollbackOnError`) to provide instant UI feedback. If the server call fails, SWR automatically rolls back to the previous state.
+
+```typescript
+// frontastic/hooks/useWishlist/index.ts
+import useSWR, { mutate } from 'swr';
+import { useCallback } from 'react';
+import { sdk } from 'sdk';
+import type { Wishlist, LineItem } from 'shared/types';
+
+const useWishlist = () => {
+  const extensions = sdk.composableCommerce;
+  const result = useSWR('/action/wishlist/getWishlist', extensions.wishlist.getWishlist);
+  const data = result.data?.isError ? {} : { data: result.data?.data };
+
+  const addToWishlist = useCallback(
+    async (wishlist: Wishlist, lineItem: LineItem, count = 1) => {
+      // Build the optimistic next state immediately
+      const newWishlist = { ...wishlist, lineItems: [...(wishlist.lineItems ?? []), lineItem] };
+
+      const res = extensions.wishlist.addItem({
+        variant: { sku: lineItem.variant?.sku },
+        count,
+      });
+
+      // SWR optimistic update: show new state immediately, rollback on error
+      await mutate('/action/wishlist/getWishlist', res, {
+        optimisticData: { data: newWishlist },
+        rollbackOnError: true,
+      });
+    },
+    []
+  );
+
+  const removeFromWishlist = useCallback(
+    async (wishlist: Wishlist, lineItem: LineItem) => {
+      const newWishlist = {
+        ...wishlist,
+        lineItems: (wishlist.lineItems ?? []).filter((li) => li.lineItemId !== lineItem.lineItemId),
+      };
+
+      const res = extensions.wishlist.removeItem({ lineItem: { id: lineItem.lineItemId } });
+
+      await mutate('/action/wishlist/getWishlist', res, {
+        optimisticData: { data: newWishlist },
+        rollbackOnError: true,
+      });
+    },
+    []
+  );
+
+  return { ...data, isLoading: result.isLoading, addToWishlist, removeFromWishlist };
 };
 ```

@@ -14,20 +14,9 @@ description: >
   sitemap, B2B storefront. MUST be consulted before building storefront pages
   or integrating commercetools data into a frontend application. Do NOT use
   for backend API code, data modeling, or Merchant Center UI.
-license: MIT
-metadata:
-  author: ariessolutionsio
-  version: "1.0.0"
 ---
 
 # commercetools Frontend & Storefront Development
-
-Production-tested patterns for building commerce storefronts -- either using commercetools Frontend (the hosted frontend product with Studio) or headless with Next.js and React. Built from hundreds of real-world implementations by Aries Solutions Engineering.
-
-> **Aries Solutions** is a commercetools Platinum partner with the most live
-> commercetools implementations in North America. These patterns reflect
-> real-world storefront launches on Vercel and Netlify, not theoretical best
-> practices.
 
 ## Two Development Paths
 
@@ -109,25 +98,6 @@ Both approaches share patterns for product pages, cart/checkout UI, and performa
 | Missing error boundaries around commerce data | [references/storefront-architecture.md](references/storefront-architecture.md) | One failed API call crashes the entire page |
 | Hardcoding locale/currency instead of using routing | [references/storefront-architecture.md](references/storefront-architecture.md) | Broken multi-market support, wrong prices |
 
-## Complements the commercetools MCP
+## MCP Complement
 
-This skill provides **judgment and patterns** -- when to use which rendering
-strategy, what goes wrong in production storefronts, and how to structure
-frontend code correctly. For API access and schema reference, use the
-commercetools MCP servers:
-
-| Need | Use |
-|------|-----|
-| Search documentation, fetch GraphQL/OAS schemas | [Developer MCP](https://docs.commercetools.com/sdk/mcp/developer-mcp) (free, 100 req/15 min) |
-| CRUD operations on products, carts, orders | [Commerce MCP](https://docs.commercetools.com/sdk/mcp/commerce-mcp) (95+ tools, requires auth) |
-| Storefront architecture, rendering, UI patterns | **This skill** |
-
-**Workflow**: Use this skill to understand the _right pattern_ for your
-storefront, then use the MCP to look up exact field names and API shapes,
-then build the frontend code.
-
-## Related Skills
-
-- [commercetools-api](../commercetools-api/SKILL.md) -- Backend API patterns for cart, checkout, orders, payments, extensions, and subscriptions
-- [commercetools-merchant-center](../commercetools-merchant-center/SKILL.md) -- Merchant Center custom applications and views (separate from storefront development)
-- [commercetools-data](../commercetools-data/SKILL.md) -- Product type design, custom types, category hierarchies (affects what data is available on the frontend)
+Use this skill for storefront patterns, then use the [Developer MCP](https://docs.commercetools.com/sdk/mcp/developer-mcp) to look up field names and schemas, and the [Commerce MCP](https://docs.commercetools.com/sdk/mcp/commerce-mcp) for CRUD operations.

@@ -4,6 +4,46 @@
 
 This file catalogs the full spectrum of data modeling anti-patterns. Each entry includes the mistake, why developers make it, the consequence, and the correct approach. Use this as a review checklist before finalizing any data model design.
 
+## Table of Contents
+- [Product Type Anti-Patterns](#product-type-anti-patterns)
+  - [1. Mirroring the PIM/ERP Schema](#1-mirroring-the-pimerp-schema)
+  - [2. Using Text for Everything](#2-using-text-for-everything)
+  - [3. Single-Use Attributes](#3-single-use-attributes)
+  - [4. Ignoring Attribute Name Consistency](#4-ignoring-attribute-name-consistency)
+  - [5. Using Product Types Where Categories Would Work](#5-using-product-types-where-categories-would-work)
+  - [6. Not Testing with Real Data](#6-not-testing-with-real-data)
+- [Custom Type Anti-Patterns](#custom-type-anti-patterns)
+  - [7. Confusing Custom Types with Custom Objects](#7-confusing-custom-types-with-custom-objects)
+  - [8. Field Name Collisions in Shared Types](#8-field-name-collisions-in-shared-types)
+  - [9. Attempting In-Place Field Type Changes](#9-attempting-in-place-field-type-changes)
+- [Category Anti-Patterns](#category-anti-patterns)
+  - [10. Deep Category Nesting (5+ Levels)](#10-deep-category-nesting-5-levels)
+  - [11. Assuming Category Inheritance](#11-assuming-category-inheritance)
+  - [12. Using Categories for Dynamic Collections](#12-using-categories-for-dynamic-collections)
+  - [13. Exceeding 10,000 Categories](#13-exceeding-10000-categories)
+- [Localization Anti-Patterns](#localization-anti-patterns)
+  - [14. Over-Localizing Universal Data](#14-over-localizing-universal-data)
+  - [15. No Locale Fallback Strategy](#15-no-locale-fallback-strategy)
+  - [16. Separate Projects Per Country](#16-separate-projects-per-country)
+- [Import Anti-Patterns](#import-anti-patterns)
+  - [17. Exceeding the 20-Resource Batch Limit](#17-exceeding-the-20-resource-batch-limit)
+  - [18. Ignoring Import Order Dependencies](#18-ignoring-import-order-dependencies)
+  - [19. Not Monitoring Import Operations](#19-not-monitoring-import-operations)
+  - [20. Missing Keys on Resources](#20-missing-keys-on-resources)
+- [Architecture Anti-Patterns](#architecture-anti-patterns)
+  - [21. Multiple Projects Instead of Stores](#21-multiple-projects-instead-of-stores)
+  - [22. Storing Non-Price Data in Prices](#22-storing-non-price-data-in-prices)
+  - [23. Not Using Product Projections for Storefront](#23-not-using-product-projections-for-storefront)
+  - [24. Not Leveraging the Product Search API](#24-not-leveraging-the-product-search-api)
+- [Data Model Review Checklist](#data-model-review-checklist)
+  - [Product Types](#product-types)
+  - [Custom Types](#custom-types)
+  - [Categories](#categories)
+  - [Localization](#localization)
+  - [Import](#import)
+  - [Architecture](#architecture)
+- [Reference](#reference)
+
 ## Product Type Anti-Patterns
 
 ### 1. Mirroring the PIM/ERP Schema

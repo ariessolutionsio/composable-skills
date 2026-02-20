@@ -4,6 +4,23 @@
 
 The commercetools Import API is a separate, purpose-built API for bulk data loading. It operates asynchronously, uses upsert semantics, and has strict batching constraints. Understanding its behavior is essential for initial data loads, ongoing sync, and migrations.
 
+## Table of Contents
+- [Import API Architecture](#import-api-architecture)
+  - [Import API Host URLs](#import-api-host-urls)
+  - [Supported Resource Types](#supported-resource-types)
+- [Import Client Setup](#import-client-setup)
+- [Import Containers](#import-containers)
+- [The 20-Resource Batch Limit](#the-20-resource-batch-limit)
+- [Import Order: Dependencies Matter](#import-order-dependencies-matter)
+- [Monitoring Import Operations](#monitoring-import-operations)
+- [Import Operation States](#import-operation-states)
+- [Upsert Behavior](#upsert-behavior)
+- [Category Import (Top-Down)](#category-import-top-down)
+- [Product Import with Variants](#product-import-with-variants)
+- [Common Import Pitfalls](#common-import-pitfalls)
+- [Design Checklist](#design-checklist)
+- [Reference](#reference)
+
 ## Import API Architecture
 
 ```
@@ -137,30 +154,15 @@ await importApiRoot
 **Recommended (batched import with rate control):**
 
 ```typescript
-interface ImportableResource {
-  key: string;
-  [key: string]: any;
-}
+interface ImportableResource { key: string; [key: string]: any; }
 
-/**
- * Batch import resources with rate limiting.
- * Handles the 20-resource-per-request limit and prevents overwhelming the API.
- */
+/** Batch import resources with rate limiting (20-resource-per-request limit). */
 async function batchImport<T extends ImportableResource>(
-  resources: T[],
-  containerKey: string,
+  resources: T[], containerKey: string,
   importFn: (batch: T[], containerKey: string) => Promise<void>,
-  options: {
-    batchSize?: number;
-    delayBetweenBatchesMs?: number;
-    onBatchComplete?: (batchIndex: number, totalBatches: number) => void;
-  } = {}
+  { batchSize = 20, delayBetweenBatchesMs = 200, onBatchComplete }:
+    { batchSize?: number; delayBetweenBatchesMs?: number; onBatchComplete?: (i: number, total: number) => void } = {}
 ): Promise<void> {
-  const {
-    batchSize = 20,
-    delayBetweenBatchesMs = 200,
-    onBatchComplete,
-  } = options;
 
   const batches: T[][] = [];
   for (let i = 0; i < resources.length; i += batchSize) {
@@ -256,70 +258,43 @@ Import Operations track the status of each imported resource and persist for 48 
 
 ```typescript
 // Check the status of import operations in a container
-async function checkImportStatus(containerKey: string): Promise<{
-  total: number;
-  imported: number;
-  rejected: number;
-  unresolved: number;
-  processing: number;
-}> {
+async function checkImportStatus(containerKey: string) {
   const stats = { total: 0, imported: 0, rejected: 0, unresolved: 0, processing: 0 };
   let offset = 0;
   const limit = 500;
 
   while (true) {
-    const response = await importApiRoot
-      .importContainers()
+    const response = await importApiRoot.importContainers()
       .withImportContainerKeyValue({ importContainerKey: containerKey })
-      .importOperations()
-      .get({ queryArgs: { limit, offset } })
-      .execute();
+      .importOperations().get({ queryArgs: { limit, offset } }).execute();
 
     for (const op of response.body.results) {
       stats.total++;
       switch (op.state) {
         case 'imported': stats.imported++; break;
-        case 'rejected': stats.rejected++; break;
+        case 'rejected': case 'validationFailed': stats.rejected++; break;
         case 'unresolved': stats.unresolved++; break;
-        case 'validationFailed': stats.rejected++; break;
         default: stats.processing++; break;
       }
     }
-
     if (response.body.results.length < limit) break;
     offset += limit;
   }
-
   return stats;
 }
 
 // Log detailed errors for failed imports
-async function logImportErrors(containerKey: string): Promise<void> {
-  const response = await importApiRoot
-    .importContainers()
+async function logImportErrors(containerKey: string) {
+  const response = await importApiRoot.importContainers()
     .withImportContainerKeyValue({ importContainerKey: containerKey })
     .importOperations()
-    .get({
-      queryArgs: {
-        limit: 500,
-        // Filter to only failed operations
-        states: ['rejected', 'validationFailed'],
-      },
-    })
+    .get({ queryArgs: { limit: 500, states: ['rejected', 'validationFailed'] } })
     .execute();
 
   for (const op of response.body.results) {
     console.error(`FAILED: ${op.resourceKey} (state: ${op.state})`);
-    if (op.errors) {
-      for (const err of op.errors) {
-        console.error(`  Error: ${err.message}`);
-      }
-    }
-    if (op.unresolvedReferences) {
-      for (const ref of op.unresolvedReferences) {
-        console.error(`  Unresolved: ${ref.typeId} with key "${ref.key}"`);
-      }
-    }
+    for (const err of (op.errors ?? [])) console.error(`  Error: ${err.message}`);
+    for (const ref of (op.unresolvedReferences ?? [])) console.error(`  Unresolved: ${ref.typeId} key="${ref.key}"`);
   }
 }
 
@@ -369,7 +344,7 @@ async function waitForImportCompletion(
 The Import API uses the `key` field to determine whether to create or update.
 
 ```typescript
-// First import: creates the product (key does not exist)
+// Import creates if key is new, updates if key already exists (upsert)
 await importApiRoot
   .productDrafts()
   .importContainers()
@@ -378,7 +353,7 @@ await importApiRoot
     body: {
       type: 'product-draft',
       resources: [{
-        key: 'classic-tee',  // Key used for matching
+        key: 'classic-tee',  // Key used for create-or-update matching
         name: { en: 'Classic T-Shirt' },
         productType: { typeId: 'product-type', key: 'apparel' },
         slug: { en: 'classic-tee' },
@@ -386,31 +361,11 @@ await importApiRoot
     },
   })
   .execute();
+// Re-importing with the same key updates the existing resource.
 
-// Second import with same key: UPDATES the existing product
-await importApiRoot
-  .productDrafts()
-  .importContainers()
-  .withImportContainerKeyValue({ importContainerKey: 'product-import' })
-  .post({
-    body: {
-      type: 'product-draft',
-      resources: [{
-        key: 'classic-tee',  // Same key -- this is an UPDATE
-        name: { en: 'Classic T-Shirt (Updated)' },
-        productType: { typeId: 'product-type', key: 'apparel' },
-        slug: { en: 'classic-tee' },
-      }],
-    },
-  })
-  .execute();
-
-// IMPORTANT: Keys are MANDATORY for the Import API
-// Products without keys cannot be imported or updated via Import API
-
+// IMPORTANT: Keys are MANDATORY for the Import API.
 // WARNING: Product import is a FULL REPLACE, not a merge.
-// Omitting fields in a product import REMOVES existing values.
-// Always include all fields you wish to retain.
+// Omitting fields REMOVES existing values. Always include all fields to retain.
 ```
 
 ## Category Import (Top-Down)
@@ -422,74 +377,33 @@ interface CategoryImportData {
   key: string;
   name: Record<string, string>;
   slug: Record<string, string>;
-  parentKey?: string;
+  parentKey?: string;  // Omit for root categories
   orderHint?: string;
 }
 
-async function importCategoriesTopDown(
-  categories: CategoryImportData[],
-  containerKey: string
-): Promise<void> {
-  // Sort: roots first, then children, then grandchildren
+async function importCategoriesTopDown(categories: CategoryImportData[], containerKey: string) {
+  // Sort: roots first (no parentKey), then children
   const roots = categories.filter(c => !c.parentKey);
   const children = categories.filter(c => c.parentKey);
 
-  // Import roots first
-  if (roots.length > 0) {
-    await batchImport(
-      roots,
-      containerKey,
-      async (batch, key) => {
-        await importApiRoot
-          .categories()
-          .importContainers()
-          .withImportContainerKeyValue({ importContainerKey: key })
-          .post({
-            body: {
-              type: 'category',
-              resources: batch.map(cat => ({
-                key: cat.key,
-                name: cat.name,
-                slug: cat.slug,
-                orderHint: cat.orderHint,
-              })),
-            },
-          })
-          .execute();
-      }
-    );
-
-    // Wait for roots to be imported before importing children
+  // Import roots first, wait for completion, then import children
+  for (const batch of [roots, children]) {
+    if (batch.length === 0) continue;
+    await batchImport(batch, containerKey, async (chunk, key) => {
+      await importApiRoot.categories().importContainers()
+        .withImportContainerKeyValue({ importContainerKey: key })
+        .post({
+          body: {
+            type: 'category',
+            resources: chunk.map(cat => ({
+              key: cat.key, name: cat.name, slug: cat.slug, orderHint: cat.orderHint,
+              // Root categories omit parent; children reference parent by key
+              ...(cat.parentKey ? { parent: { typeId: 'category', key: cat.parentKey } } : {}),
+            })),
+          },
+        }).execute();
+    });
     await waitForImportCompletion(containerKey);
-  }
-
-  // Import children (they reference parents by key)
-  if (children.length > 0) {
-    await batchImport(
-      children,
-      containerKey,
-      async (batch, key) => {
-        await importApiRoot
-          .categories()
-          .importContainers()
-          .withImportContainerKeyValue({ importContainerKey: key })
-          .post({
-            body: {
-              type: 'category',
-              resources: batch.map(cat => ({
-                key: cat.key,
-                name: cat.name,
-                slug: cat.slug,
-                parent: cat.parentKey
-                  ? { typeId: 'category', key: cat.parentKey }
-                  : undefined,
-                orderHint: cat.orderHint,
-              })),
-            },
-          })
-          .execute();
-      }
-    );
   }
 }
 ```
@@ -521,19 +435,11 @@ async function importProductsWithVariants(
           country: 'DE',
         }],
       },
+      // variants use the same structure as masterVariant (key, sku, attributes, prices)
       variants: [
-        {
-          key: 'classic-tee-black-m',
-          sku: 'TEE-BLK-M',
-          attributes: [
-            { name: 'color', value: { key: 'black' } },
-            { name: 'size', value: { key: 'M' } },
-          ],
-          prices: [{
-            value: { type: 'centPrecision' as const, currencyCode: 'EUR', centAmount: 2999, fractionDigits: 2 },
-            country: 'DE',
-          }],
-        },
+        { key: 'classic-tee-black-m', sku: 'TEE-BLK-M',
+          attributes: [{ name: 'color', value: { key: 'black' } }, { name: 'size', value: { key: 'M' } }],
+          prices: [{ value: { type: 'centPrecision' as const, currencyCode: 'EUR', centAmount: 2999, fractionDigits: 2 }, country: 'DE' }] },
       ],
     },
   ];

@@ -6,6 +6,29 @@
 
 This reference covers building headless commerce storefronts with Next.js (App Router) and React against the commercetools APIs. If you are using commercetools Frontend (the hosted product with Studio), see `ct-frontend.md` instead -- though many rendering and i18n patterns here apply to both approaches.
 
+## Table of Contents
+- [Architecture Overview](#architecture-overview)
+- [Pattern 1: SDK Client Setup for Next.js](#pattern-1-sdk-client-setup-for-nextjs)
+- [Pattern 2: Data Fetching Strategies](#pattern-2-data-fetching-strategies)
+- [Pattern 2b: Catch-All Routing with Parallel Data Fetching (scaffold)](#pattern-2b-catch-all-routing-with-parallel-data-fetching-scaffold)
+  - [Request Deduplication with React cache() (scaffold)](#request-deduplication-with-react-cache-scaffold)
+- [Pattern 3: Server Components vs Client Components](#pattern-3-server-components-vs-client-components)
+- [Pattern 3b: SSR + SWR Hydration (scaffold)](#pattern-3b-ssr--swr-hydration-scaffold)
+- [Pattern 4: GraphQL vs REST for Frontend](#pattern-4-graphql-vs-rest-for-frontend)
+- [Pattern 5: Internationalization (i18n) with Locale Routing](#pattern-5-internationalization-i18n-with-locale-routing)
+  - [Locale Routing with next-intl (scaffold)](#locale-routing-with-next-intl-scaffold)
+  - [Locale-Currency Mapping (scaffold)](#locale-currency-mapping-scaffold)
+  - [Middleware for Locale Detection (scaffold)](#middleware-for-locale-detection-scaffold)
+  - [Message Loading with Fallback (scaffold)](#message-loading-with-fallback-scaffold)
+  - [Layout with Locale Segment](#layout-with-locale-segment)
+  - [Localized String Helpers](#localized-string-helpers)
+  - [CurrencyHelpers (scaffold)](#currencyhelpers-scaffold)
+- [Pattern 6: Error Boundaries for Commerce Data](#pattern-6-error-boundaries-for-commerce-data)
+- [Pattern 7: Route Handlers for Mutations](#pattern-7-route-handlers-for-mutations)
+- [Pattern 8: Customer Authentication](#pattern-8-customer-authentication)
+- [Architecture Checklist](#architecture-checklist)
+- [Reference](#reference)
+
 ## Architecture Overview
 
 A headless commercetools storefront consists of three layers:
@@ -187,68 +210,7 @@ const memoizedFetchPageData = cache(async (slug: string, qs: string) => {
 
 ## Pattern 3: Server Components vs Client Components
 
-**Rule of thumb:** Fetch commerce data in Server Components. Make it interactive in Client Components.
-
-```typescript
-// app/products/[slug]/page.tsx (Server Component -- default in App Router)
-import { getProductBySlug } from '@/lib/commercetools/products';
-import { ProductDetail } from '@/components/product/ProductDetail';
-import { AddToCartButton } from '@/components/cart/AddToCartButton';
-
-export default async function ProductPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
-  // This runs on the server -- API credentials never reach the browser
-  const product = await getProductBySlug(params.slug, 'en');
-
-  if (!product) notFound();
-
-  return (
-    <>
-      {/* Server Component: renders product data as static HTML */}
-      <ProductDetail product={product} />
-
-      {/* Client Component: handles interactive cart mutation */}
-      <AddToCartButton
-        productId={product.id}
-        variantId={product.masterVariant.id}
-      />
-    </>
-  );
-}
-```
-
-```typescript
-// components/cart/AddToCartButton.tsx
-'use client';
-
-import { useState, useTransition } from 'react';
-import { addToCart } from '@/app/actions/cart';
-
-export function AddToCartButton({
-  productId,
-  variantId,
-}: {
-  productId: string;
-  variantId: number;
-}) {
-  const [isPending, startTransition] = useTransition();
-
-  const handleAddToCart = () => {
-    startTransition(async () => {
-      await addToCart(productId, variantId, 1);
-    });
-  };
-
-  return (
-    <button onClick={handleAddToCart} disabled={isPending}>
-      {isPending ? 'Adding...' : 'Add to Cart'}
-    </button>
-  );
-}
-```
+**Rule of thumb:** Fetch commerce data in Server Components (the default in App Router). Make it interactive in Client Components marked with `'use client'`. Server Components keep API credentials off the browser and render product data as static HTML. Client Components handle mutations (add-to-cart, variant selectors, search autocomplete). Pattern 2 above demonstrates this split -- the page function is a Server Component; interactive cart/checkout pieces are Client Components.
 
 ## Pattern 3b: SSR + SWR Hydration (scaffold)
 
@@ -285,32 +247,7 @@ SWR is configured to avoid unnecessary revalidation for data that was just fetch
 | Complexity | Higher setup, query management | Simpler, method-chain API |
 | Best for | PDPs with complex variant/price structures | Most CRUD operations, cart mutations |
 
-**GraphQL example for a lean PDP query:**
-
-```typescript
-// lib/commercetools/graphql.ts
-const CTP_GRAPHQL_URL = `${process.env.CTP_API_URL}/${process.env.CTP_PROJECT_KEY}/graphql`;
-
-export async function ctGraphQL<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
-  const token = await getAccessToken(); // from your auth module
-
-  const response = await fetch(CTP_GRAPHQL_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ query, variables }),
-    next: { revalidate: 60 }, // Next.js fetch cache
-  });
-
-  const json = await response.json();
-  if (json.errors) {
-    throw new Error(json.errors[0].message);
-  }
-  return json.data;
-}
-```
+For GraphQL, create a thin wrapper around `fetch` that targets `${CTP_API_URL}/${CTP_PROJECT_KEY}/graphql`, passes a Bearer token, and uses `next: { revalidate: 60 }` for ISR caching. Query only the fields you need (e.g., `name`, `slug`, `masterVariant.sku`, `prices`, `images`) to minimize payload size. Use `graphql-codegen` for type-safe query results.
 
 ```graphql
 # queries/product.graphql
@@ -423,33 +360,7 @@ const loadMessageBundleWithFallback = async (locale: string) => {
 
 ### Layout with Locale Segment
 
-**CORRECT -- locale segment in the URL:**
-
-```typescript
-// app/[locale]/layout.tsx
-import { notFound } from 'next/navigation';
-
-const SUPPORTED_LOCALES = ['en-US', 'de-DE', 'fr-FR'] as const;
-type Locale = (typeof SUPPORTED_LOCALES)[number];
-
-export default function LocaleLayout({
-  children,
-  params,
-}: {
-  children: React.ReactNode;
-  params: { locale: string };
-}) {
-  if (!SUPPORTED_LOCALES.includes(params.locale as Locale)) {
-    notFound();
-  }
-
-  return (
-    <html lang={params.locale}>
-      <body>{children}</body>
-    </html>
-  );
-}
-```
+Use a `[locale]` dynamic segment in your `app/` directory (e.g., `app/[locale]/layout.tsx`). Validate the locale param against your supported list and call `notFound()` for unsupported values. Set `<html lang={params.locale}>` for correct language attribution.
 
 ### Localized String Helpers
 
@@ -494,36 +405,7 @@ Use `CurrencyHelpers.formatMoneyCurrency(price, locale)` instead of manual forma
 
 ## Pattern 6: Error Boundaries for Commerce Data
 
-Wrap commerce-dependent sections in error boundaries so a failed API call does not crash the entire page.
-
-```typescript
-// app/products/[slug]/page.tsx
-import { Suspense } from 'react';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { ProductDetail } from '@/components/product/ProductDetail';
-import { ProductRecommendations } from '@/components/product/ProductRecommendations';
-import { ProductSkeleton } from '@/components/product/ProductSkeleton';
-
-export default async function ProductPage({ params }: { params: { slug: string } }) {
-  return (
-    <>
-      {/* Critical: product detail must render or show error */}
-      <ErrorBoundary fallback={<p>Product temporarily unavailable</p>}>
-        <Suspense fallback={<ProductSkeleton />}>
-          <ProductDetail slug={params.slug} />
-        </Suspense>
-      </ErrorBoundary>
-
-      {/* Non-critical: recommendations can fail silently */}
-      <ErrorBoundary fallback={null}>
-        <Suspense fallback={null}>
-          <ProductRecommendations slug={params.slug} />
-        </Suspense>
-      </ErrorBoundary>
-    </>
-  );
-}
-```
+Wrap commerce-dependent sections in `<ErrorBoundary>` + `<Suspense>` pairs so a failed API call does not crash the entire page. **Critical sections** (product detail) should show an error message. **Non-critical sections** (recommendations, recently viewed) should use `fallback={null}` so they fail silently without disrupting the core shopping experience.
 
 ## Pattern 7: Route Handlers for Mutations
 

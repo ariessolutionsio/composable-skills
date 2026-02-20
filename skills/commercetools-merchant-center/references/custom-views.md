@@ -2,6 +2,41 @@
 
 Custom Views are embedded UI panels that render inside the built-in Merchant Center applications. Unlike Custom Applications, they do not have their own menu entry or full-page layout. Instead, they appear as slide-out panels on top of existing MC pages, providing contextual functionality without requiring the user to leave their current workflow.
 
+## Table of Contents
+- [When to Use a Custom View](#when-to-use-a-custom-view)
+- [Project Setup](#project-setup)
+  - [Scaffolding](#scaffolding)
+  - [Project Structure](#project-structure)
+- [Configuration](#configuration)
+  - [Correct Configuration](#correct-configuration)
+  - [Incorrect Configuration -- Common Mistakes](#incorrect-configuration----common-mistakes)
+- [Panel Types and Design Guidelines](#panel-types-and-design-guidelines)
+  - [LARGE (Extended) Panel](#large-extended-panel)
+  - [SMALL (Narrow) Panel](#small-narrow-panel)
+  - [Design Rules](#design-rules)
+- [Available Locators](#available-locators)
+  - [Products](#products)
+  - [Categories](#categories)
+  - [Customers](#customers)
+  - [Orders](#orders)
+  - [Standalone Prices](#standalone-prices)
+  - [Discounts](#discounts)
+  - [Operations](#operations)
+  - [Project Settings](#project-settings)
+- [CustomViewShell](#customviewshell)
+  - [Entry Point Pattern](#entry-point-pattern)
+  - [Accessing Host Context](#accessing-host-context)
+  - [Routing Within Custom Views](#routing-within-custom-views)
+- [Permissions for Custom Views](#permissions-for-custom-views)
+  - [Defining Permission Constants](#defining-permission-constants)
+  - [With Additional Permission Groups](#with-additional-permission-groups)
+- [Incorrect Patterns](#incorrect-patterns)
+  - [Using ApplicationShell Instead of CustomViewShell](#using-applicationshell-instead-of-customviewshell)
+  - [Ignoring Panel Size Constraints](#ignoring-panel-size-constraints)
+  - [Not Using useCustomViewContext for Host Data](#not-using-usecustomviewcontext-for-host-data)
+- [Checklist: Custom View Setup](#checklist-custom-view-setup)
+- [Reference](#reference)
+
 ## When to Use a Custom View
 
 - You need to **add functionality to an existing MC page** (e.g., order tracking on the Order detail page)

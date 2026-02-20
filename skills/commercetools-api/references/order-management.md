@@ -2,6 +2,24 @@
 
 Orders in commercetools are snapshots of a cart at the moment of purchase. They track the full lifecycle from placement through fulfillment, returns, and refunds. Understanding the state machine constraints and the separation between order states, payment states, and shipment states prevents broken workflows and inconsistent data.
 
+## Table of Contents
+- [Creating Orders from Carts](#creating-orders-from-carts)
+- [Order State Machine](#order-state-machine)
+  - [Order State](#order-state)
+  - [Payment State](#payment-state)
+  - [Shipment State](#shipment-state)
+- [Delivery and Parcel Tracking](#delivery-and-parcel-tracking)
+  - [Adding a Parcel to an Existing Delivery](#adding-a-parcel-to-an-existing-delivery)
+- [Return and Refund Workflow](#return-and-refund-workflow)
+- [Order Queries](#order-queries)
+  - [Query Orders with Predicates](#query-orders-with-predicates)
+  - [Reference Expansion](#reference-expansion)
+- [Order Edits](#order-edits)
+- [Custom Order Workflows with State Machines](#custom-order-workflows-with-state-machines)
+- [Sync Info (External System Tracking)](#sync-info-external-system-tracking)
+- [Creating Orders from Quotes (B2B)](#creating-orders-from-quotes-b2b)
+- [Checklist](#checklist)
+
 ## Creating Orders from Carts
 
 ```typescript

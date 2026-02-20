@@ -4,6 +4,18 @@
 
 commercetools has strong built-in support for multi-locale and multi-currency commerce through `LocalizedString` fields and scoped pricing. However, misusing these features is one of the most common causes of bloated API responses and broken storefront experiences.
 
+## Table of Contents
+- [LocalizedString: When to Use and When Not To](#localizedstring-when-to-use-and-when-not-to)
+- [Locale Decision Matrix](#locale-decision-matrix)
+- [Pattern 1: Locale Fallback Strategy](#pattern-1-locale-fallback-strategy)
+- [Pattern 2: Multi-Currency Pricing](#pattern-2-multi-currency-pricing)
+  - [Price Selection Logic](#price-selection-logic)
+- [Pattern 3: Stores for Multi-Market Localization](#pattern-3-stores-for-multi-market-localization)
+- [Pattern 4: GraphQL Locale Differences](#pattern-4-graphql-locale-differences)
+- [Pattern 5: Using localeProjection for Performance](#pattern-5-using-localeprojection-for-performance)
+- [Design Checklist](#design-checklist)
+- [Reference](#reference)
+
 ## LocalizedString: When to Use and When Not To
 
 A `LocalizedString` is a map of locale codes to string values. It is the correct choice for genuinely translatable content. It is the **wrong** choice for universal data.

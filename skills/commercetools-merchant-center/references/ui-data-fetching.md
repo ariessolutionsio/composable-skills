@@ -2,6 +2,16 @@
 
 GraphQL with useMcQuery, mutations, REST data fetching, Forward-To proxy for external APIs, and connector hook patterns for Merchant Center custom applications.
 
+## Table of Contents
+- [Data Fetching](#data-fetching)
+  - [GraphQL with useMcQuery (Recommended)](#graphql-with-usemcquery-recommended)
+  - [Mutations with useMcMutation](#mutations-with-usemcmutation)
+  - [Available GRAPHQL_TARGETS](#available-graphql_targets)
+  - [REST Data Fetching with SDK](#rest-data-fetching-with-sdk)
+  - [Custom HTTP Clients (Fetch, Axios, SWR)](#custom-http-clients-fetch-axios-swr)
+  - [Forward-To Proxy for External APIs](#forward-to-proxy-for-external-apis)
+  - [Connector Hook Pattern](#connector-hook-pattern)
+
 ## Data Fetching
 
 ### GraphQL with useMcQuery (Recommended)

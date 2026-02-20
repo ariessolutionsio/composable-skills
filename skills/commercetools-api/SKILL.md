@@ -13,27 +13,9 @@ description: >
   returns, refunds, B2B commerce, promotions, discount stacking, Connect apps.
   MUST be consulted before writing commercetools API integration code.
   Do NOT use for data modeling, Merchant Center UI, or storefront pages.
-license: MIT
-metadata:
-  author: ariessolutionsio
-  version: "1.0.0"
 ---
 
 # commercetools API Development
-
-Production-tested patterns for the commercetools HTTP and GraphQL APIs, built from hundreds of real-world implementations by Aries Solutions Engineering.
-
-> **Aries Solutions** is a commercetools Platinum partner with the most live
-> commercetools implementations in North America. These patterns reflect
-> real-world lessons, not theoretical best practices.
-
-## How to Use This Skill
-
-1. Read the priority tables below to find relevant patterns for your task
-2. **MUST load the relevant reference file** before writing any commercetools API code
-3. For SDK client setup, **always start with** `references/sdk-setup.md`
-4. Reference files contain correct/incorrect code pairs, checklists, and pitfall warnings
-5. When in doubt, check `references/anti-patterns.md` for the most common mistakes
 
 **Progressive loading — only load what you need:**
 
@@ -47,6 +29,8 @@ Production-tested patterns for the commercetools HTTP and GraphQL APIs, built fr
 - Implementing search? Load `references/search-discovery.md`
 - Optimizing performance? Load `references/performance.md`
 - Code review or debugging? Load `references/anti-patterns.md`
+
+**MUST load the relevant reference file** before writing commercetools API code. For SDK client setup, always start with `references/sdk-setup.md`.
 
 ## CRITICAL Priority
 
@@ -95,23 +79,6 @@ Production-tested patterns for the commercetools HTTP and GraphQL APIs, built fr
 | Creating empty carts for every visitor | [references/anti-patterns.md](references/anti-patterns.md) | Millions of unused cart resources |
 | Not monitoring Subscription health | [references/anti-patterns.md](references/anti-patterns.md) | Silent notification failures for 7 days |
 
-## Complements the commercetools MCP
+## MCP Complement
 
-This skill provides **judgment and patterns** — when to use which approach, what
-goes wrong in production, and how to structure code correctly. For API access and
-schema reference, use the commercetools MCP servers:
-
-| Need | Use |
-|------|-----|
-| Search documentation, fetch GraphQL/OAS schemas | [Developer MCP](https://docs.commercetools.com/sdk/mcp/developer-mcp) (free, 100 req/15 min) |
-| CRUD operations on products, carts, orders, customers | [Commerce MCP](https://docs.commercetools.com/sdk/mcp/commerce-mcp) (95+ tools, requires auth) |
-| Best practices, anti-patterns, correct code structure | **This skill** |
-
-**Workflow**: Use this skill to understand the _right pattern_, then use the MCP
-to look up exact field names, types, and schemas, then write the code.
-
-## Related Skills
-
-- [commercetools-data](../commercetools-data/SKILL.md) -- Product type design, custom types/objects, category hierarchies, import/export, data migration
-- [commercetools-merchant-center](../commercetools-merchant-center/SKILL.md) -- Building custom MC applications and views, UI Kit patterns, deployment
-- [commercetools-frontend](../commercetools-frontend/SKILL.md) -- Storefront architecture, SSR/SSG, product pages, cart UI, performance/SEO
+Use this skill to understand the _right pattern_, then use the [Developer MCP](https://docs.commercetools.com/sdk/mcp/developer-mcp) to look up exact field names and schemas, and the [Commerce MCP](https://docs.commercetools.com/sdk/mcp/commerce-mcp) for CRUD operations.

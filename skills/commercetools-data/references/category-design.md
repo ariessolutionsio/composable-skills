@@ -4,6 +4,18 @@
 
 Categories in commercetools form a tree structure used for storefront navigation and product organization. Unlike many traditional commerce platforms, commercetools does **not** automatically inherit products from child categories to parent categories. This single behavior difference causes more broken category pages than any other design mistake.
 
+## Table of Contents
+- [The Inheritance Trap](#the-inheritance-trap)
+- [Pattern 1: Shallow Hierarchies](#pattern-1-shallow-hierarchies)
+- [Pattern 2: Customer-Centric Category Names](#pattern-2-customer-centric-category-names)
+- [Pattern 3: Category Assignment Strategy](#pattern-3-category-assignment-strategy)
+- [Pattern 4: Category Ordering](#pattern-4-category-ordering)
+- [Pattern 5: Custom Fields on Categories](#pattern-5-custom-fields-on-categories)
+- [Pattern 6: Building the Category Navigation Tree](#pattern-6-building-the-category-navigation-tree)
+- [The 10,000 Category Limit](#the-10000-category-limit)
+- [Design Checklist](#design-checklist)
+- [Reference](#reference)
+
 ## The Inheritance Trap
 
 In most e-commerce platforms, querying "Footwear" automatically returns products from "Boots", "Sneakers", and "Sandals". In commercetools, it does **not**.
@@ -485,5 +497,4 @@ commercetools enforces a limit of 10,000 categories per project. If you are appr
 ## Reference
 
 - [Categories API](https://docs.commercetools.com/api/projects/categories)
-- [Category Best Practices](https://docs.commercetools.com/learning-model-your-product-catalog/categorization/best-practices-and-advanced-category-management)
 - [Product Search API (subtree queries)](https://docs.commercetools.com/api/projects/product-search)

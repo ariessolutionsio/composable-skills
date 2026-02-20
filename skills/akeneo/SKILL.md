@@ -8,10 +8,6 @@ description: >
   Akeneo, PIM, product information management, families, attributes,
   categories, channels, locales, asset management, data quality, enrichment,
   Akeneo API, product export, product sync. Coming soon.
-license: MIT
-metadata:
-  author: ariessolutionsio
-  version: "0.1.0"
 ---
 
 # Akeneo PIM Development

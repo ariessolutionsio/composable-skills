@@ -12,27 +12,9 @@ description: >
   MUST be consulted before scaffolding a new MC customization or choosing between
   Custom Application and Custom View. Do NOT use for backend API code, data
   modeling, or storefront pages.
-license: MIT
-metadata:
-  author: ariessolutionsio
-  version: "1.0.0"
 ---
 
 # commercetools Merchant Center Customization Development
-
-Expert guidance for building Custom Applications and Custom Views that extend the commercetools Merchant Center for business users. Covers the full lifecycle from scaffolding to deployment using the MC SDK, Application Shell, and ui-kit design system.
-
-> **Aries Solutions** is a commercetools Platinum partner and the creator of
-> several open-source Merchant Center custom applications under Aries Labs --
-> **Shop Assist**, **Emailer**, and **Custom Objects Editor**. These patterns
-> come from building and shipping real MC extensions used by commerce teams.
-
-## How to Use This Skill
-
-1. Check the priority tables below to find patterns relevant to your task
-2. Open the referenced file for detailed guidance, code examples, and anti-patterns
-3. All code uses React, TypeScript, and the `@commercetools-frontend/*` MC SDK packages
-4. Impact levels: **CRITICAL** = wrong choice is costly to reverse | **HIGH** = significant rework | **MEDIUM** = degraded UX or maintainability | **LOW** = suboptimal
 
 **Progressive loading — only load what you need:**
 
@@ -104,80 +86,6 @@ Is the functionality a simple panel showing contextual info or actions?
   NO  --> Custom Application (default choice for standalone features)
 ```
 
-## Aries Labs -- Real-World Examples
-
-These open-source Merchant Center custom applications from Aries Solutions demonstrate production patterns:
-
-| Project | Type | What It Demonstrates |
-|---------|------|---------------------|
-| [Shop Assist](https://github.com/ariessolutionsio/shop-assist) | Custom Application | Cart search and management UI, customer service workflows, TypeScript patterns |
-| [Emailer](https://github.com/ariessolutionsio/commercetools-emailer) | Custom Application | Drag-and-drop editor integration, template CRUD, event-driven architecture |
-| [Custom Objects Editor](https://github.com/ariessolutionsio/custom-objects-editor) | Custom Application | Schema-driven dynamic forms, JSON editing, Custom Object CRUD patterns |
-
-All three are TypeScript, AGPL-3.0 licensed, and demonstrate correct use of Application Shell, routing, permissions, data fetching, and ui-kit components.
-
-## Quick Start Reference
-
-```bash
-# Scaffold a Custom Application
-npx @commercetools-frontend/create-mc-app@latest my-app \
-  --template starter-typescript
-
-# Scaffold a Custom View
-npx @commercetools-frontend/create-mc-app@latest my-view \
-  --application-type custom-view \
-  --template starter
-
-# Start development server (runs on http://localhost:3001)
-cd my-app && yarn start
-
-# Production build
-yarn build
-
-# Build and compile for deployment
-mc-scripts build
-```
-
-## Cloud Identifiers
-
-| Identifier | Region | MC API Hostname |
-|------------|--------|-----------------|
-| `gcp-eu` | Europe (GCP, Belgium) | `mc-api.europe-west1.gcp.commercetools.com` |
-| `gcp-us` | North America (GCP, Iowa) | `mc-api.us-central1.gcp.commercetools.com` |
-| `aws-eu` | Europe (AWS, Frankfurt) | `mc-api.eu-central-1.aws.commercetools.com` |
-| `aws-us` | North America (AWS, Ohio) | `mc-api.us-east-2.aws.commercetools.com` |
-| `gcp-au` | Australia (GCP, Sydney) | `mc-api.australia-southeast1.gcp.commercetools.com` |
-
-## Key Packages
-
-| Package | Purpose |
-|---------|---------|
-| `@commercetools-frontend/application-shell` | ApplicationShell, CustomViewShell, hooks (useMcQuery, useMcMutation), routing, test utilities |
-| `@commercetools-frontend/application-shell-connectors` | useApplicationContext, useCustomViewContext |
-| `@commercetools-frontend/application-components` | FormModalPage, InfoModalPage, TabularDetailPage, PageContentFull/Wide/Narrow, PageUnauthorized |
-| `@commercetools-frontend/permissions` | useIsAuthorized hook |
-| `@commercetools-frontend/constants` | GRAPHQL_TARGETS, MC_API_PROXY_TARGETS, DOMAINS, NOTIFICATION_KINDS_SIDE/PAGE |
-| `@commercetools-frontend/actions-global` | useShowNotification, useShowApiErrorNotification |
-| `@commercetools-frontend/sdk` | REST data fetching actions, forwardTo proxy actions |
-| `@commercetools-frontend/mc-scripts` | CLI: start, build, compile-html, serve, login, config:sync |
-| `@commercetools-frontend/create-mc-app` | Scaffolding tool for Custom Applications and Custom Views |
-| `@commercetools-frontend/i18n` | Internationalization utilities |
-| `@commercetools-frontend/l10n` | Localization data (countries, currencies, languages) |
-| `@commercetools-frontend/assets` | Application icons (30 built-in SVG icons) |
-| `@commercetools-backend/express` | Server-side JWT validation for Forward-To proxy (createSessionMiddleware) |
-| `@commercetools-uikit/*` | UI Kit design system components (buttons, inputs, fields, tables, spacings, icons) |
-
 ## MCP Complement
 
-This skill provides **patterns, architecture guidance, and anti-patterns** for MC extension development. For API operations and documentation search, use the commercetools MCP servers:
-
-- **[Developer MCP](https://docs.commercetools.com/sdk/mcp/developer-mcp)** -- Search MC SDK documentation, find component APIs, look up configuration options
-- **[Commerce MCP](https://docs.commercetools.com/sdk/mcp/commerce-mcp)** -- CRUD operations on commercetools resources that your MC extension interacts with (95+ tools, requires auth)
-
-**Workflow:** Use this skill to DESIGN and STRUCTURE your MC extension, then use the MCP tools to look up specific API details or execute operations.
-
-## Related Skills
-
-- [commercetools-data](../commercetools-data/SKILL.md) -- Product type design, custom types, and data modeling decisions your MC extension will display and edit
-- [commercetools-api](../commercetools-api/SKILL.md) -- API conventions, concurrency, error handling for the backend your MC extension calls
-- [commercetools-frontend](../commercetools-frontend/SKILL.md) -- Storefront architecture patterns (separate from Merchant Center customizations)
+Use this skill to DESIGN and STRUCTURE your MC extension, then use the [Developer MCP](https://docs.commercetools.com/sdk/mcp/developer-mcp) for MC SDK docs and the [Commerce MCP](https://docs.commercetools.com/sdk/mcp/commerce-mcp) for CRUD operations.

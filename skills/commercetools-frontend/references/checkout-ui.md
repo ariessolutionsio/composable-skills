@@ -1,10 +1,19 @@
-# Checkout & Wishlist UI Patterns
+# Checkout UI Patterns
 
-Checkout patterns including commercetools Checkout SDK integration, shipping method selection, wishlist management, and cart/checkout checklist for commercetools storefronts.
+Checkout patterns including commercetools Checkout SDK integration, shipping method selection, and cart/checkout checklist for commercetools storefronts.
+
+## Table of Contents
+- [Checkout Patterns](#checkout-patterns)
+  - [Pattern 1: Dual-Mode Checkout Tastic (scaffold)](#pattern-1-dual-mode-checkout-tastic-scaffold)
+  - [Pattern 2: commercetools Checkout SDK Integration (scaffold)](#pattern-2-commercetools-checkout-sdk-integration-scaffold)
+  - [Pattern 3: Custom Checkout Flow (Without Hosted Checkout)](#pattern-3-custom-checkout-flow-without-hosted-checkout)
+  - [Pattern 4: Shipping Method Selection](#pattern-4-shipping-method-selection)
+- [Cart & Checkout Checklist](#cart--checkout-checklist)
+- [Reference](#reference)
 
 ## Checkout Patterns
 
-### Pattern 6: Dual-Mode Checkout Tastic (from the official scaffold repos)
+### Pattern 1: Dual-Mode Checkout Tastic (scaffold)
 
 The official scaffold supports two checkout modes in a single tastic, controlled by the `isCtPaymentOnly` flag set in the commercetools Frontend Studio. When `isCtPaymentOnly` is false, the entire checkout is handled by the embedded commercetools Checkout SDK. When true, the storefront renders its own address/shipping forms and only delegates payment to commercetools Checkout.
 
@@ -50,7 +59,7 @@ const CheckoutTastic = ({ data }: TasticProps<CheckoutTasticData>) => {
 };
 ```
 
-### Pattern 7: commercetools Checkout SDK Integration (from the official scaffold repos)
+### Pattern 2: commercetools Checkout SDK Integration (scaffold)
 
 The scaffold wraps the commercetools Checkout Browser SDK in a dedicated component. Key details: it uses a `useRef` guard to prevent double-initialization in React strict mode, manages a session token via a `useCheckout` hook, and handles three critical lifecycle events (`checkout_loaded`, `checkout_cancelled`, `checkout_completed`).
 
@@ -119,21 +128,21 @@ const CommercetoolsCheckout = ({ logo, callbackUrl }: {
   }, [isExpired]);
 
   return (
-    <div className="min-h-screen lg:bg-neutral-200">
+    <div>
       <Header logo={logo} />
       {isLoading && (
-        <div className="flex justify-center py-12">
+        <div>
           <span className="animate-spin h-8 w-8 border-2 border-neutral-400 border-t-transparent rounded-full" />
         </div>
       )}
       {/* The checkout SDK renders into this container via the data-ctc attribute */}
-      <div data-ctc className="checkout-Container" />
+      <div data-ctc />
     </div>
   );
 };
 ```
 
-### Pattern 8: Custom Checkout Flow (Without Hosted Checkout)
+### Pattern 3: Custom Checkout Flow (Without Hosted Checkout)
 
 For full control over the checkout experience instead of using commercetools Checkout. The flow is a step-based state machine: address -> shipping -> review -> payment. Each step validates before progression. Errors are shown inline.
 
@@ -158,15 +167,15 @@ export default function CheckoutPage() {
   if (!cart || cart.lineItems.length === 0) return <p>Your cart is empty.</p>;
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <nav className="flex gap-4 mb-8">
+    <div>
+      <nav>
         {(['address', 'shipping', 'review', 'payment'] as const).map((s, i) => (
-          <span key={s} className={`text-sm ${step === s ? 'font-bold' : 'text-gray-400'}`}>
+          <span key={s} className={step === s ? 'font-bold' : 'text-gray-400'}>
             {i + 1}. {s.charAt(0).toUpperCase() + s.slice(1)}
           </span>
         ))}
       </nav>
-      {error && <div className="p-4 bg-red-50 text-red-700 rounded mb-4">{error}</div>}
+      {error && <div>{error}</div>}
       {step === 'address' && (
         <AddressForm onSubmit={async (address) => {
           try {
@@ -190,7 +199,7 @@ export default function CheckoutPage() {
 }
 ```
 
-### Pattern 9: Shipping Method Selection
+### Pattern 4: Shipping Method Selection
 
 Fetch shipping methods for the cart (only matching methods for the shipping address), display them as radio options with price, and set the selected method on the cart.
 
@@ -222,82 +231,24 @@ export function ShippingMethodSelector({ cartId, onSelect }: { cartId: string; o
   if (loading) return <p>Loading shipping options...</p>;
 
   return (
-    <div className="space-y-3">
-      <h2 className="text-xl font-semibold">Shipping Method</h2>
+    <div>
+      <h2>Shipping Method</h2>
       {methods.map((method) => (
-        <label key={method.id} className={`flex items-center justify-between p-4 border rounded cursor-pointer ${selected === method.id ? 'border-black' : 'border-gray-200'}`}>
-          <div className="flex items-center gap-3">
+        <label key={method.id} className={selected === method.id ? 'border-black' : 'border-gray-200'}>
+          <div>
             <input type="radio" name="shipping" value={method.id} checked={selected === method.id} onChange={() => setSelected(method.id)} />
             <div>
-              <p className="font-medium">{method.name}</p>
-              {method.description && <p className="text-sm text-gray-500">{method.description}</p>}
+              <p>{method.name}</p>
+              {method.description && <p>{method.description}</p>}
             </div>
           </div>
-          <span className="font-medium">{method.price.centAmount === 0 ? 'Free' : formatPrice(method.price.centAmount, method.price.currencyCode, 'en-US')}</span>
+          <span>{method.price.centAmount === 0 ? 'Free' : formatPrice(method.price.centAmount, method.price.currencyCode, 'en-US')}</span>
         </label>
       ))}
-      <button onClick={() => selected && onSelect(selected)} disabled={!selected} className="w-full py-3 bg-black text-white rounded disabled:opacity-50">Continue to Review</button>
+      <button onClick={() => selected && onSelect(selected)} disabled={!selected}>Continue to Review</button>
     </div>
   );
 }
-```
-
-## Wishlist Patterns
-
-### Pattern 10: Wishlist with SWR Optimistic Updates (from the official scaffold repos)
-
-The scaffold manages wishlists with SWR and uses its optimistic update API (`optimisticData` + `rollbackOnError`) to provide instant UI feedback. If the server call fails, SWR automatically rolls back to the previous state.
-
-```typescript
-// frontastic/hooks/useWishlist/index.ts
-import useSWR, { mutate } from 'swr';
-import { useCallback } from 'react';
-import { sdk } from 'sdk';
-import type { Wishlist, LineItem } from 'shared/types';
-
-const useWishlist = () => {
-  const extensions = sdk.composableCommerce;
-  const result = useSWR('/action/wishlist/getWishlist', extensions.wishlist.getWishlist);
-  const data = result.data?.isError ? {} : { data: result.data?.data };
-
-  const addToWishlist = useCallback(
-    async (wishlist: Wishlist, lineItem: LineItem, count = 1) => {
-      // Build the optimistic next state immediately
-      const newWishlist = { ...wishlist, lineItems: [...(wishlist.lineItems ?? []), lineItem] };
-
-      const res = extensions.wishlist.addItem({
-        variant: { sku: lineItem.variant?.sku },
-        count,
-      });
-
-      // SWR optimistic update: show new state immediately, rollback on error
-      await mutate('/action/wishlist/getWishlist', res, {
-        optimisticData: { data: newWishlist },
-        rollbackOnError: true,
-      });
-    },
-    []
-  );
-
-  const removeFromWishlist = useCallback(
-    async (wishlist: Wishlist, lineItem: LineItem) => {
-      const newWishlist = {
-        ...wishlist,
-        lineItems: (wishlist.lineItems ?? []).filter((li) => li.lineItemId !== lineItem.lineItemId),
-      };
-
-      const res = extensions.wishlist.removeItem({ lineItem: { id: lineItem.lineItemId } });
-
-      await mutate('/action/wishlist/getWishlist', res, {
-        optimisticData: { data: newWishlist },
-        rollbackOnError: true,
-      });
-    },
-    []
-  );
-
-  return { ...data, isLoading: result.isLoading, addToWishlist, removeFromWishlist };
-};
 ```
 
 ## Cart & Checkout Checklist

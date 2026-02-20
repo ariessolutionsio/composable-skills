@@ -34,24 +34,22 @@ for skill_dir in "$SKILLS_DIR"/*/; do
     continue
   fi
 
-  # Read the file
-  content="$(cat "$skill_file")"
-
   # 2. Frontmatter exists (opening and closing ---)
-  if ! echo "$content" | head -1 | grep -q '^---$'; then
+  first_line="$(head -1 "$skill_file")"
+  if [[ "$first_line" != "---" ]]; then
     error "$skill_name: Missing opening frontmatter delimiter (---)"
     continue
   fi
 
-  # Find the closing --- (second occurrence)
-  closing_line="$(echo "$content" | tail -n +2 | grep -n '^---$' | head -1 | cut -d: -f1)"
+  # Find the closing --- (second occurrence, searching from line 2)
+  closing_line="$(tail -n +2 "$skill_file" | grep -n '^---$' | head -1 | cut -d: -f1 || true)"
   if [[ -z "$closing_line" ]]; then
     error "$skill_name: Missing closing frontmatter delimiter (---)"
     continue
   fi
 
   # Extract frontmatter (between the two --- lines)
-  frontmatter="$(echo "$content" | sed -n "2,$((closing_line))p")"
+  frontmatter="$(sed -n "2,${closing_line}p" "$skill_file")"
 
   # 3. name field exists and is non-empty
   fm_name="$(echo "$frontmatter" | grep -E '^name:\s*' | head -1 | sed 's/^name:\s*//' | xargs)"
@@ -115,36 +113,18 @@ for skill_dir in "$SKILLS_DIR"/*/; do
     fi
   fi
 
-  # 7. license field exists and equals MIT
-  fm_license="$(echo "$frontmatter" | grep -E '^license:\s*' | head -1 | sed 's/^license:\s*//' | xargs)"
-  if [[ -z "$fm_license" ]]; then
-    error "$skill_name: 'license' field missing in frontmatter"
-  elif [[ "$fm_license" != "MIT" ]]; then
-    error "$skill_name: 'license' is '$fm_license' (expected 'MIT')"
+  # 7. Only name and description allowed in frontmatter
+  extra_keys="$(echo "$frontmatter" | grep -E '^[a-z][a-z_-]*:' | grep -vE '^(name|description):' | head -5 || true)"
+  if [[ -n "$extra_keys" ]]; then
+    while IFS= read -r key_line; do
+      key="$(echo "$key_line" | cut -d: -f1)"
+      error "$skill_name: unexpected frontmatter field '$key' (only 'name' and 'description' allowed)"
+    done <<< "$extra_keys"
   fi
 
-  # 8. metadata block exists with required fields
-  if ! echo "$frontmatter" | grep -qE '^metadata:'; then
-    error "$skill_name: 'metadata' block missing in frontmatter"
-  else
-    fm_author="$(echo "$frontmatter" | grep -E '^\s+author:\s*' | head -1 | sed 's/^.*author:\s*//' | xargs)"
-    if [[ -z "$fm_author" ]]; then
-      error "$skill_name: 'metadata.author' missing in frontmatter"
-    elif [[ "$fm_author" != "ariessolutionsio" ]]; then
-      error "$skill_name: 'metadata.author' is '$fm_author' (expected 'ariessolutionsio')"
-    fi
-
-    fm_version="$(echo "$frontmatter" | grep -E '^\s+version:\s*' | head -1 | sed 's/^.*version:\s*//' | xargs | tr -d '"')"
-    if [[ -z "$fm_version" ]]; then
-      error "$skill_name: 'metadata.version' missing in frontmatter"
-    elif ! echo "$fm_version" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-      error "$skill_name: 'metadata.version' '$fm_version' does not match semver (X.Y.Z)"
-    fi
-  fi
-
-  # 10. Body under 500 lines
+  # 8. Body under 500 lines
   body_start=$((closing_line + 1))
-  total_lines="$(echo "$content" | wc -l)"
+  total_lines="$(wc -l < "$skill_file")"
   body_lines=$((total_lines - body_start))
   if [[ "$body_lines" -gt 500 ]]; then
     error "$skill_name: body is $body_lines lines (max 500)"
@@ -152,7 +132,7 @@ for skill_dir in "$SKILLS_DIR"/*/; do
     echo "  body: $body_lines lines (OK)"
   fi
 
-  # 11. All references/*.md links resolve to existing files
+  # 9. All references/*.md links resolve to existing files
   ref_links="$(grep -oE 'references/[a-zA-Z0-9_-]+\.md' "$skill_file" | sort -u || true)"
   if [[ -n "$ref_links" ]]; then
     while IFS= read -r ref; do
@@ -166,7 +146,7 @@ for skill_dir in "$SKILLS_DIR"/*/; do
     echo "  references: none"
   fi
 
-  # 12. Reference file size check (warn if over 500 lines)
+  # 10. Reference file size check (warn if over 500 lines)
   if [[ -d "$skill_dir/references" ]]; then
     for ref_file in "$skill_dir"/references/*.md; do
       [[ -f "$ref_file" ]] || continue
@@ -178,7 +158,7 @@ for skill_dir in "$SKILLS_DIR"/*/; do
     done
   fi
 
-  # 13. All ../*/SKILL.md cross-references resolve to existing files
+  # 11. All ../*/SKILL.md cross-references resolve to existing files
   xref_links="$(grep -oE '\.\./[a-zA-Z0-9_-]+/SKILL\.md' "$skill_file" | sort -u || true)"
   if [[ -n "$xref_links" ]]; then
     while IFS= read -r xref; do

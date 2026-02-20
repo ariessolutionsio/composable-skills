@@ -2,6 +2,26 @@
 
 commercetools has three distinct discount mechanisms -- Product Discounts, Cart Discounts, and Discount Codes -- each with different scoping, timing, and stacking behavior. Misconfiguring their interaction is the most common source of pricing bugs in production, often resulting in customers getting larger or smaller discounts than intended.
 
+## Table of Contents
+- [Discount Types Overview](#discount-types-overview)
+- [Product Discounts](#product-discounts)
+  - [Product Discount Value Types](#product-discount-value-types)
+- [Cart Discounts](#cart-discounts)
+  - [Percentage Off Line Items](#percentage-off-line-items)
+  - [Absolute Amount Off Shipping](#absolute-amount-off-shipping)
+  - [Free Gift Line Item](#free-gift-line-item)
+  - [Fixed Price (Set Price)](#fixed-price-set-price)
+- [Discount Codes](#discount-codes)
+- [Discount Stacking and Sort Order](#discount-stacking-and-sort-order)
+  - [Sort Order](#sort-order)
+  - [Stacking Mode](#stacking-mode)
+  - [Product Discount + Cart Discount Interaction](#product-discount--cart-discount-interaction)
+- [Direct Discounts](#direct-discounts)
+- [Active Discount Limits](#active-discount-limits)
+- [Pricing Best Practices](#pricing-best-practices)
+  - [Do Not Use Prices for Non-Price Data](#do-not-use-prices-for-non-price-data)
+- [Checklist](#checklist)
+
 ## Discount Types Overview
 
 | Type | When Applied | Where Visible | Limit |

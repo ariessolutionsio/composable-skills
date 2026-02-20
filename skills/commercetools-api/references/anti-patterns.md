@@ -1,308 +1,164 @@
 # Common Anti-Patterns
 
-A consolidated reference of the most frequent and damaging mistakes in commercetools implementations. Each anti-pattern includes the symptom, what goes wrong, and the correct approach. Use this as a quick-scan checklist during code review or debugging.
+A quick-reference index of the most frequent and damaging mistakes in commercetools implementations. Each entry summarizes the problem and points to the domain file with the full explanation, code examples, and recommended pattern.
+
+## Table of Contents
+- [SDK & Client Anti-Patterns](#sdk--client-anti-patterns)
+- [Concurrency Anti-Patterns](#concurrency-anti-patterns)
+- [Query Anti-Patterns](#query-anti-patterns)
+- [Cart & Checkout Anti-Patterns](#cart--checkout-anti-patterns)
+- [Extension Anti-Patterns](#extension-anti-patterns)
+- [Subscription Anti-Patterns](#subscription-anti-patterns)
+- [Discount Anti-Patterns](#discount-anti-patterns)
+- [B2B Anti-Patterns](#b2b-anti-patterns)
+- [Inventory Anti-Patterns](#inventory-anti-patterns)
+- [Quick-Scan Review Checklist](#quick-scan-review-checklist)
 
 ## SDK & Client Anti-Patterns
 
 ### Creating a New Client Per Request
 
-**What goes wrong:** Each `ClientBuilder.build()` creates a new auth token manager. Creating one per request causes memory leaks and token exhaustion in long-running services.
-
-**Anti-Pattern:**
-```typescript
-async function getProduct(id: string) {
-  // New client on every request — leaks memory and tokens
-  const client = new ClientBuilder()
-    .withClientCredentialsFlow(authOptions)
-    .withHttpMiddleware(httpOptions)
-    .build();
-  const apiRoot = createApiBuilderFromCtpClient(client)
-    .withProjectKey({ projectKey });
-  return apiRoot.products().withId({ ID: id }).get().execute();
-}
-```
-
-**Recommended:**
-```typescript
-// Create once, export, reuse everywhere
-const client = new ClientBuilder()
-  .withClientCredentialsFlow(authOptions)
-  .withHttpMiddleware(httpOptions)
-  .build();
-export const apiRoot = createApiBuilderFromCtpClient(client)
-  .withProjectKey({ projectKey });
-```
+Each `ClientBuilder.build()` creates a new auth token manager. Creating one per request causes memory leaks and token exhaustion. See `sdk-setup.md` for the correct singleton pattern.
 
 ### Importing Types from the Wrong API Package
 
-**What goes wrong:** Multiple commercetools APIs define types with the same name (e.g., `Asset` exists in the HTTP API, Import API, and Audit Log API). Importing from the wrong package causes silent runtime failures.
-
-**Anti-Pattern:**
-```typescript
-// Importing from the wrong package
-import { Asset } from '@commercetools/importapi-sdk'; // Wrong!
-// Using this with the HTTP API causes silent serialization errors
-```
-
-**Recommended:**
-```typescript
-// Always use API-specific imports
-import { Asset } from '@commercetools/platform-sdk'; // HTTP API
-import { Asset as ImportAsset } from '@commercetools/importapi-sdk'; // Import API
-```
+Multiple commercetools APIs define types with the same name (e.g., `Asset`). Importing from the wrong package causes silent runtime failures. See `sdk-setup.md` for correct import conventions.
 
 ### Custom Middleware Ordering
 
-**What goes wrong:** `withMiddleware()` inserts custom middleware at the START of the execution chain, not the end. Custom middleware executes before built-in auth, retry, and error handling.
-
-**Recommended:** Understand the middleware execution order. If your custom middleware depends on authentication being complete, structure it to delegate to `next()` first and process the response.
+`withMiddleware()` inserts custom middleware at the START of the execution chain, not the end. Custom middleware executes before built-in auth, retry, and error handling. See `sdk-setup.md` for middleware details.
 
 ## Concurrency Anti-Patterns
 
 ### Not Including Version in Updates
 
-**What goes wrong:** Every update and delete request fails with a 409 ConcurrentModification error.
-
-**Anti-Pattern:**
-```typescript
-// Missing version field
-await apiRoot.orders().withId({ ID: orderId }).post({
-  body: {
-    // version: ??? — omitted
-    actions: [{ action: 'changeOrderState', orderState: 'Confirmed' }],
-  },
-}).execute(); // 400: version is required
-```
+Every update and delete request requires the current resource version. Omitting it causes a 400 error. See `sdk-setup.md` for the optimistic concurrency pattern.
 
 ### Guessing the Next Version
 
-**What goes wrong:** Background processes, extensions, and other clients can increment the version by more than 1. Guessed versions cause 409 errors.
-
-**Anti-Pattern:**
-```typescript
-const order = await apiRoot.orders().withId({ ID: orderId }).get().execute();
-// WRONG: Assuming version increments by exactly 1
-await apiRoot.orders().withId({ ID: orderId }).post({
-  body: {
-    version: order.body.version + 1, // WRONG
-    actions: [{ action: 'changeOrderState', orderState: 'Confirmed' }],
-  },
-}).execute();
-```
-
-**Recommended:** Always use the version from the most recent API response. Never assume the increment.
+Background processes, extensions, and other clients can increment the version by more than 1. Guessed versions cause 409 errors. Always use the version from the most recent API response. See `sdk-setup.md` for correct version handling.
 
 ### Blind Retry on 409
 
-**What goes wrong:** The concurrent modification may have already achieved the desired state. Retrying without checking can double-apply changes (e.g., adding a line item twice).
-
-**Recommended:** On a 409 error, re-read the resource, check if the desired change is still needed, and only then retry.
+The concurrent modification may have already achieved the desired state. Retrying without checking can double-apply changes (e.g., adding a line item twice). See `sdk-setup.md` for the re-read-then-retry pattern.
 
 ### Sequential Single-Action Updates
 
-**What goes wrong:** Multiple sequential updates create multiple version conflict windows. Slow and prone to 409 errors under concurrent load.
-
-**Anti-Pattern:**
-```typescript
-// Three separate requests where one would suffice
-await update(cartId, v1, [{ action: 'setShippingAddress', address }]);
-await update(cartId, v2, [{ action: 'setBillingAddress', address }]);
-await update(cartId, v3, [{ action: 'setShippingMethod', shippingMethod }]);
-```
-
-**Recommended:**
-```typescript
-// One request with all actions batched
-await update(cartId, version, [
-  { action: 'setShippingAddress', address: shippingAddress },
-  { action: 'setBillingAddress', address: billingAddress },
-  { action: 'setShippingMethod', shippingMethod },
-]);
-```
+Multiple sequential updates create multiple version conflict windows and are slow under concurrent load. Batch related actions into a single request. See `sdk-setup.md` for action batching.
 
 ## Query Anti-Patterns
 
 ### Using Products Endpoint for Storefront
 
-**What goes wrong:** `/products` returns both staged and current data, roughly doubling the response size. Response times and bandwidth usage are significantly worse.
-
-**Recommended:** Use `/product-projections` with `staged: false` for all user-facing applications.
+`/products` returns both staged and current data, roughly doubling the response size. Use `/product-projections` with `staged: false` for user-facing applications. See `performance.md` for query optimization.
 
 ### Using Query API for Product Search
 
-**What goes wrong:** The Query API is not search-optimized. Queries on product attributes are not indexed by default and become extremely slow on large catalogs.
-
-**Recommended:** Use the Product Search API for all storefront search, product listing pages, and faceted navigation.
+The Query API is not search-optimized and becomes extremely slow on large catalogs. Use the Product Search API for storefront search, listing pages, and faceted navigation. See `search-discovery.md` for search patterns.
 
 ### Expanding All References
 
-**What goes wrong:** Response payloads balloon from kilobytes to hundreds of kilobytes. API latency increases. Query complexity score rises.
-
-**Anti-Pattern:**
-```typescript
-// Expanding everything "just in case"
-const order = await apiRoot.orders().withId({ ID: orderId }).get({
-  queryArgs: {
-    expand: [
-      'lineItems[*].variant',
-      'lineItems[*].variant.prices[*].customerGroup',
-      'lineItems[*].variant.prices[*].channel',
-      'lineItems[*].productType',
-      'paymentInfo.payments[*]',
-      'paymentInfo.payments[*].customer',
-      'customer',
-      'store',
-      'state',
-    ],
-  },
-}).execute();
-```
-
-**Recommended:** Only expand references that the consuming code actually uses. Use GraphQL for precise field selection.
+Response payloads balloon when expanding references "just in case." Only expand what the consuming code actually uses, or use GraphQL for precise field selection. See `performance.md` for expansion guidelines.
 
 ### Not Omitting Total in Paginated Queries
 
-**What goes wrong:** The `total` count computation adds overhead to every paginated query, even when the total is not displayed.
-
-**Recommended:** Set `withTotal: false` on queries where the total count is not needed in the UI.
+The `total` count computation adds overhead to every paginated query. Set `withTotal: false` when the total count is not displayed. See `performance.md` for pagination best practices.
 
 ### High-Offset Pagination
 
-**What goes wrong:** Offset-based pagination degrades linearly as offset increases. Offset 10,000 means the API must scan and skip 10,000 records.
-
-**Recommended:** Use cursor-based pagination (ID-based) for large datasets. Use `where: 'id > "lastId"'` with `sort: ['id asc']`.
+Offset-based pagination degrades linearly as offset increases. Use cursor-based pagination (`where: 'id > "lastId"'` with `sort: ['id asc']`) for large datasets. See `performance.md` for cursor pagination.
 
 ## Cart & Checkout Anti-Patterns
 
 ### Creating Empty Carts for Every Visitor
 
-**What goes wrong:** Massive proliferation of empty carts. The 10,000,000 cart limit per project is consumed by carts that never had items.
-
-**Recommended:** Only create a cart when the customer adds their first item.
+Massive proliferation of empty carts consumes the 10,000,000 cart limit per project. Only create a cart when the customer adds their first item. See `cart-checkout.md` for the correct creation pattern.
 
 ### Not Freezing Cart Before Payment
 
-**What goes wrong:** Promotions expire or prices change during the payment flow (especially redirect-based flows like 3D Secure or PayPal). The customer is charged a different amount than displayed.
-
-**Recommended:** Freeze the cart before initiating payment. This locks all prices and prevents background recalculations.
+Promotions or prices can change during redirect-based payment flows, causing the customer to be charged a different amount than displayed. Freeze the cart before initiating payment. See `cart-checkout.md` for the freeze-pay-order sequence.
 
 ### Reusing or Deleting Payment Resources
 
-**What goes wrong:** Redirect-based payment methods (3D Secure, PayPal) can complete asynchronously. Deleting the Payment resource loses the webhook target and audit trail.
-
-**Recommended:** Create a new Payment resource for each attempt. Never delete old Payments.
+Redirect-based payments can complete asynchronously. Deleting the Payment resource loses the webhook target and audit trail. Create a new Payment resource for each attempt. See `cart-checkout.md` for payment patterns.
 
 ### Setting Store After Cart Creation
 
-**What goes wrong:** There is no update action to set the Store on an existing Cart. The cart must be recreated.
-
-**Recommended:** Always set the Store at cart creation time, via the store-specific endpoint.
+There is no update action to set the Store on an existing Cart; it must be set at creation time. See `cart-checkout.md` for store-scoped cart creation.
 
 ### Deferring Shipping Address
 
-**What goes wrong:** Without a shipping address, tax rates and shipping methods cannot be calculated. Cart totals are inaccurate throughout the shopping experience.
-
-**Recommended:** Set at least the country in the shipping address as early as possible (even using geo-IP estimation).
+Without a shipping address, tax rates and shipping methods cannot be calculated, making cart totals inaccurate throughout the shopping experience. Set at least the country early. See `cart-checkout.md` for early address setting.
 
 ## Extension Anti-Patterns
 
 ### Using Extensions for Async Work
 
-**What goes wrong:** Extensions block the API response. If the external service is slow, the entire API call fails. This affects ALL clients, including the Merchant Center.
-
-**Recommended:** Use Subscriptions for all asynchronous processing (emails, sync, analytics).
+Extensions block the API response. If the external service is slow, the entire API call fails, affecting all clients including the Merchant Center. Use Subscriptions for async processing. See `extensions-subscriptions.md` for the correct split.
 
 ### Slow Extension Handlers
 
-**What goes wrong:** Extensions have a strict 2-second timeout (10 seconds for payments). Exceeding the timeout causes the entire API call to fail.
-
-**Recommended:** Parallelize external calls within the handler. Move complex orchestration to a BFF layer.
+Extensions have a strict 2-second timeout (10 seconds for payments). Exceeding it fails the entire API call. Parallelize external calls or move orchestration to a BFF layer. See `extensions-subscriptions.md` for timeout strategies.
 
 ### One Extension Per Business Rule
 
-**What goes wrong:** The 25-extension-per-project limit is consumed quickly. No room for new integrations.
-
-**Recommended:** Consolidate related extensions into multi-purpose handlers with internal routing.
+The 25-extension-per-project limit is consumed quickly. Consolidate related extensions into multi-purpose handlers with internal routing. See `extensions-subscriptions.md` for consolidation patterns.
 
 ## Subscription Anti-Patterns
 
 ### Non-Idempotent Message Handlers
 
-**What goes wrong:** Messages can be delivered more than once. Non-idempotent handlers cause duplicate side effects (double emails, double inventory adjustments).
-
-**Recommended:** Use message IDs or resource version numbers to detect and ignore duplicates.
+Messages can be delivered more than once. Non-idempotent handlers cause duplicate side effects (double emails, double inventory adjustments). Use message IDs or resource versions for deduplication. See `extensions-subscriptions.md` for idempotent handler patterns.
 
 ### Assuming Message Ordering
 
-**What goes wrong:** Messages do not arrive in chronological order. "OrderShipped" can arrive before "OrderConfirmed", corrupting downstream state.
-
-**Recommended:** Use version numbers to detect stale messages. Discard messages with a version lower than the last processed version.
+Messages do not arrive in chronological order. Use version numbers to detect and discard stale messages. See `extensions-subscriptions.md` for ordering strategies.
 
 ### Set and Forget Subscriptions
 
-**What goes wrong:** Subscriptions silently enter `ConfigurationError` state when the destination becomes unreachable. Notifications are lost for up to 7 days before being discarded.
-
-**Recommended:** Monitor subscription health programmatically. Alert on any status other than "Healthy".
+Subscriptions silently enter `ConfigurationError` state when the destination becomes unreachable, and notifications are lost. Monitor subscription health programmatically. See `extensions-subscriptions.md` for health monitoring.
 
 ### Polling Instead of Subscribing
 
-**What goes wrong:** Wasted API calls, delayed change detection, higher latency, and unnecessary load against rate limits.
-
-**Recommended:** Use Subscriptions for change detection. Reserve polling only for initial data sync or recovery scenarios.
+Polling wastes API calls, delays change detection, and adds unnecessary load against rate limits. Use Subscriptions for change detection. See `extensions-subscriptions.md` for subscription setup.
 
 ## Discount Anti-Patterns
 
 ### Not Configuring Promotion Prioritization
 
-**What goes wrong:** The interaction between Product Discounts and Cart Discounts is unpredictable. The default mode may not match business intent.
-
-**Recommended:** Explicitly configure the Promotion Prioritization setting in Project Settings.
+The interaction between Product Discounts and Cart Discounts is unpredictable without explicit configuration. Configure the Promotion Prioritization setting in Project Settings. See `promotions-pricing.md` for prioritization details.
 
 ### Direct Discounts Blocking Discount Codes
 
-**What goes wrong:** Applying a Direct Discount to a cart silently disables all matching Cart Discounts and makes Discount Codes unusable.
-
-**Recommended:** Understand that Direct Discounts and Discount Codes are mutually exclusive on a cart.
+Applying a Direct Discount to a cart silently disables all matching Cart Discounts and makes Discount Codes unusable. These are mutually exclusive on a cart. See `promotions-pricing.md` for discount interaction rules.
 
 ### Not Testing Discount Combinations
 
-**What goes wrong:** Sort order and stacking mode interactions are subtle. Discounts that work individually may produce unexpected results when combined.
-
-**Recommended:** Create a test matrix of discount combinations. Test the impact of sort order, stacking modes, and Product Discount + Cart Discount interactions.
+Sort order and stacking mode interactions are subtle. Discounts that work individually may produce unexpected results when combined. See `promotions-pricing.md` for testing strategies.
 
 ## B2B Anti-Patterns
 
 ### Calling Associate Endpoints from the Frontend
 
-**What goes wrong:** Associate endpoints verify permissions based on URL parameters but do not validate those parameters against OAuth scopes. A malicious user could access data outside their authorization.
-
-**Recommended:** Only call Associate endpoints from trusted backend services.
+Associate endpoints verify permissions based on URL parameters but do not validate those parameters against OAuth scopes. Only call Associate endpoints from trusted backend services. See `b2b-patterns.md` for secure B2B patterns.
 
 ### Not Modeling Business Units Upfront
 
-**What goes wrong:** Bolting on B2B features after a B2C implementation results in an organizational model that does not support the customer's actual structure.
-
-**Recommended:** Design the Business Unit hierarchy at the beginning of the project.
+Bolting on B2B features after a B2C implementation results in an organizational model that does not support the customer's actual structure. Design the Business Unit hierarchy at project start. See `b2b-patterns.md` for hierarchy planning.
 
 ### Disabling Inheritance Accidentally
 
-**What goes wrong:** Changing a division's `associateMode` to `Explicit` removes all inherited associates, breaking approval workflows that depend on parent-level approvers.
-
-**Recommended:** Plan and test inheritance changes in staging before applying to production.
+Changing a division's `associateMode` to `Explicit` removes all inherited associates, breaking approval workflows. Plan and test inheritance changes in staging first. See `b2b-patterns.md` for inheritance configuration.
 
 ## Inventory Anti-Patterns
 
 ### Using quantityOnStock for Availability
 
-**What goes wrong:** `quantityOnStock` includes reserved quantities. The storefront shows more availability than actually exists, leading to overselling.
-
-**Recommended:** Always use `availableQuantity` to determine what can be sold.
+`quantityOnStock` includes reserved quantities. The storefront shows more availability than actually exists, leading to overselling. Always use `availableQuantity`. See `order-management.md` for inventory patterns.
 
 ### Assuming Returns Auto-Update Inventory
 
-**What goes wrong:** Processing returns in commercetools does NOT automatically adjust InventoryEntry quantities. Returned products are not restocked.
-
-**Recommended:** Implement explicit inventory reconciliation triggered by return events.
+Processing returns in commercetools does NOT automatically adjust InventoryEntry quantities. Implement explicit inventory reconciliation triggered by return events. See `order-management.md` for return handling.
 
 ## Quick-Scan Review Checklist
 

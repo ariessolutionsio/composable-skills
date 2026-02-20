@@ -2,6 +2,28 @@
 
 Forms with Formik, UI Kit design system components, routing patterns, internationalization, and development checklist for Merchant Center custom applications.
 
+## Table of Contents
+- [Forms with Formik](#forms-with-formik)
+  - [Basic Form Pattern](#basic-form-pattern)
+  - [Data Conversion Functions](#data-conversion-functions)
+  - [FormModalPage for Create/Edit Flows](#formmodalpage-for-createedit-flows)
+  - [Incorrect Form Patterns](#incorrect-form-patterns)
+- [UI Kit Components](#ui-kit-components)
+  - [Layout with Spacings](#layout-with-spacings)
+  - [Typography](#typography)
+  - [DataTable for Lists](#datatable-for-lists)
+  - [Buttons](#buttons)
+  - [Field Components](#field-components)
+  - [Notifications](#notifications)
+  - [Page Content Layouts](#page-content-layouts)
+  - [Page-Level Layout Components](#page-level-layout-components)
+- [Routing Patterns](#routing-patterns)
+  - [Tabbed Detail Pages](#tabbed-detail-pages)
+  - [Link Navigation](#link-navigation)
+- [Application Context & Internationalization](#application-context--internationalization)
+- [Checklist: UI Development](#checklist-ui-development)
+- [Reference](#reference)
+
 ## Forms with Formik
 
 The MC SDK is designed around Formik for form state management. UI Kit field components expect Formik-compatible props.

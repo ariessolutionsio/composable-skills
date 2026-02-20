@@ -4,6 +4,21 @@
 
 commercetools does not provide built-in migration or environment promotion tools. Every migration -- whether from a legacy platform or between commercetools environments -- requires deliberate planning. The immutability of product types makes data model changes the highest-risk aspect of any migration.
 
+## Table of Contents
+- [Migration Types](#migration-types)
+- [Legacy Platform Migration: The Strangler Pattern](#legacy-platform-migration-the-strangler-pattern)
+- [Data Cleansing Before Migration](#data-cleansing-before-migration)
+- [Environment Promotion with Terraform](#environment-promotion-with-terraform)
+- [Product Type Evolution](#product-type-evolution)
+  - [Adding Attributes (Safe)](#adding-attributes-safe)
+  - [Adding Enum Values (Safe)](#adding-enum-values-safe)
+  - [Removing Attributes (Destructive -- Requires Migration)](#removing-attributes-destructive----requires-migration)
+  - [Changing Product Types (Nuclear Option -- Delete and Recreate)](#changing-product-types-nuclear-option----delete-and-recreate)
+- [State Machine Migration](#state-machine-migration)
+- [Product Selection Migration for Multi-Store](#product-selection-migration-for-multi-store)
+- [Migration Testing Checklist](#migration-testing-checklist)
+- [Reference](#reference)
+
 ## Migration Types
 
 1. **Legacy Platform to commercetools** -- Replatforming from Magento, Salesforce Commerce Cloud, SAP Hybris, etc.
@@ -185,28 +200,13 @@ resource "commercetools_product_type" "apparel" {
   }
 }
 
-resource "commercetools_product_type" "electronics" {
-  key         = "electronics"
-  name        = "Electronics"
-  description = "Laptops, tablets, and electronic devices"
-
-  # ... attributes
-}
 ```
 
+Create one `terraform.tfvars` per environment (repeat the pattern for dev, staging, production):
+
 ```hcl
-# environments/dev/terraform.tfvars
-project_key   = "acme-dev"
-api_url       = "https://api.europe-west1.gcp.commercetools.com"
-auth_url      = "https://auth.europe-west1.gcp.commercetools.com"
-
-# environments/staging/terraform.tfvars
-project_key   = "acme-staging"
-api_url       = "https://api.europe-west1.gcp.commercetools.com"
-auth_url      = "https://auth.europe-west1.gcp.commercetools.com"
-
-# environments/production/terraform.tfvars
-project_key   = "acme-production"
+# environments/<env>/terraform.tfvars
+project_key   = "acme-<env>"
 api_url       = "https://api.europe-west1.gcp.commercetools.com"
 auth_url      = "https://auth.europe-west1.gcp.commercetools.com"
 ```
@@ -395,8 +395,14 @@ async function migrateProductToNewType(
 
 States enable custom workflows. Define them during project setup.
 
+```
+Draft (initial) --> In Review --> Approved --> Published
+                  \            \
+                   <-- reject -- <-- reject back to Draft
+```
+
 ```typescript
-// Create a custom product workflow state machine
+// Step 1: Create all states (only the initial state shown; repeat for each)
 const draftState = await apiRoot.states().post({
   body: {
     key: 'product-draft',
@@ -406,35 +412,10 @@ const draftState = await apiRoot.states().post({
     transitions: [],  // Will be updated after all states exist
   },
 }).execute();
+// Repeat for: product-in-review, product-approved, product-published
+// (set initial: false for all non-initial states)
 
-const reviewState = await apiRoot.states().post({
-  body: {
-    key: 'product-in-review',
-    type: 'ProductState',
-    name: { en: 'In Review' },
-    initial: false,
-  },
-}).execute();
-
-const approvedState = await apiRoot.states().post({
-  body: {
-    key: 'product-approved',
-    type: 'ProductState',
-    name: { en: 'Approved' },
-    initial: false,
-  },
-}).execute();
-
-const publishedState = await apiRoot.states().post({
-  body: {
-    key: 'product-published',
-    type: 'ProductState',
-    name: { en: 'Published' },
-    initial: false,
-  },
-}).execute();
-
-// Set allowed transitions
+// Step 2: Set allowed transitions on each state
 await apiRoot.states().withKey({ key: 'product-draft' }).post({
   body: {
     version: draftState.body.version,
@@ -446,34 +427,10 @@ await apiRoot.states().withKey({ key: 'product-draft' }).post({
     }],
   },
 }).execute();
+// Repeat for each state: in-review -> [approved, draft],
+// approved -> [published, draft]
 
-await apiRoot.states().withKey({ key: 'product-in-review' }).post({
-  body: {
-    version: reviewState.body.version,
-    actions: [{
-      action: 'setTransitions',
-      transitions: [
-        { typeId: 'state', key: 'product-approved' },
-        { typeId: 'state', key: 'product-draft' },  // Reject back to draft
-      ],
-    }],
-  },
-}).execute();
-
-await apiRoot.states().withKey({ key: 'product-approved' }).post({
-  body: {
-    version: approvedState.body.version,
-    actions: [{
-      action: 'setTransitions',
-      transitions: [
-        { typeId: 'state', key: 'product-published' },
-        { typeId: 'state', key: 'product-draft' },  // Send back to draft
-      ],
-    }],
-  },
-}).execute();
-
-// Transition a product through the workflow
+// Step 3: Transition a product through the workflow
 await apiRoot.products().withKey({ key: 'my-product' }).post({
   body: {
     version: productVersion,
@@ -489,20 +446,12 @@ await apiRoot.products().withKey({ key: 'my-product' }).post({
 
 ```typescript
 // Setting up Product Selections for a multi-store deployment
+
 // Step 1: Create selections for each store's assortment
 const sharedSelection = await apiRoot.productSelections().post({
-  body: {
-    key: 'shared-catalog',
-    name: { en: 'Shared Catalog (All Stores)' },
-  },
+  body: { key: 'shared-catalog', name: { en: 'Shared Catalog (All Stores)' } },
 }).execute();
-
-const premiumSelection = await apiRoot.productSelections().post({
-  body: {
-    key: 'premium-only',
-    name: { en: 'Premium Store Exclusives' },
-  },
-}).execute();
+// Repeat for: 'premium-only', etc.
 
 // Step 2: Assign products to selections
 await apiRoot.productSelections().withKey({ key: 'shared-catalog' }).post({
@@ -515,32 +464,13 @@ await apiRoot.productSelections().withKey({ key: 'shared-catalog' }).post({
   },
 }).execute();
 
-// Step 3: Link selections to stores
-await apiRoot.stores().withKey({ key: 'main-store' }).post({
-  body: {
-    version: mainStoreVersion,
-    actions: [{
-      action: 'addProductSelection',
-      productSelection: { typeId: 'product-selection', key: 'shared-catalog' },
-      active: true,
-    }],
-  },
-}).execute();
-
+// Step 3: Link selections to stores (each store can have multiple selections)
 await apiRoot.stores().withKey({ key: 'premium-store' }).post({
   body: {
     version: premiumStoreVersion,
     actions: [
-      {
-        action: 'addProductSelection',
-        productSelection: { typeId: 'product-selection', key: 'shared-catalog' },
-        active: true,
-      },
-      {
-        action: 'addProductSelection',
-        productSelection: { typeId: 'product-selection', key: 'premium-only' },
-        active: true,
-      },
+      { action: 'addProductSelection', productSelection: { typeId: 'product-selection', key: 'shared-catalog' }, active: true },
+      { action: 'addProductSelection', productSelection: { typeId: 'product-selection', key: 'premium-only' }, active: true },
     ],
   },
 }).execute();
