@@ -1,19 +1,6 @@
 ---
 name: commercetools-frontend
-description: >
-  Storefront development patterns for commercetools from Aries Solutions
-  Engineering. Use when building headless storefronts with Next.js or React,
-  implementing commercetools Frontend (Studio, components, extensions, data
-  sources, actions), creating product listing pages (PLP), product detail pages
-  (PDP), cart UI, checkout flows, or integrating commercetools Checkout. Triggers
-  on tasks involving storefront, frontend, Next.js, React, SSR, SSG, ISR, Server
-  Components, App Router, commercetools Frontend, Studio, tastics, extensions,
-  data sources, actions, PDP, PLP, category pages, cart UI, checkout UI,
-  headless commerce, GraphQL frontend, product search UI, SEO, Core Web Vitals,
-  performance, image optimization, i18n, locale routing, structured data,
-  sitemap, B2B storefront. MUST be consulted before building storefront pages
-  or integrating commercetools data into a frontend application. Do NOT use
-  for backend API code, data modeling, or Merchant Center UI.
+description: Production-tested patterns for commercetools storefronts — Next.js, React, PDP/PLP, cart, checkout, SEO, and performance from a Platinum partner with 50+ live implementations.
 ---
 
 # commercetools Frontend & Storefront Development

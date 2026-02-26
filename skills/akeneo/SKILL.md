@@ -1,13 +1,6 @@
 ---
 name: akeneo
-description: >
-  Akeneo PIM development patterns and commercetools integration from Aries
-  Solutions Engineering. Use when working with Akeneo APIs, product data
-  modeling in PIM, building data pipelines between Akeneo and commercetools,
-  or managing product enrichment workflows. Triggers on tasks involving
-  Akeneo, PIM, product information management, families, attributes,
-  categories, channels, locales, asset management, data quality, enrichment,
-  Akeneo API, product export, product sync. Coming soon.
+description: Akeneo PIM development patterns and commercetools integration — API usage, data pipelines, and product enrichment workflows. Coming soon.
 ---
 
 # Akeneo PIM Development

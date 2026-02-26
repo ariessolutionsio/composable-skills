@@ -1,19 +1,6 @@
 ---
 name: commercetools-data
-description: >
-  commercetools data modeling, product type design, custom types, custom
-  objects, category hierarchies, import/export, and migration patterns from Aries
-  Solutions Engineering. Use when designing product catalogs, creating product types
-  or custom types, modeling categories, planning data imports, or migrating to
-  commercetools. Triggers on tasks involving product types, attributes, variants,
-  custom fields, custom objects, categories, category hierarchies, Import API,
-  data migration, product selections, stores, channels, state machines,
-  localization, LocalizedString, product type design, data modeling,
-  import/export, bulk operations, or catalog management. MUST be consulted
-  before creating or modifying product types, custom types, or category
-  hierarchies. These decisions are expensive or irreversible in
-  commercetools. Do NOT use for API integration code, Merchant Center UI,
-  or storefront pages.
+description: Production-tested patterns for commercetools product types, custom types/objects, categories, import/export, and data migration from a Platinum partner with 50+ live implementations.
 ---
 
 # commercetools Data Modeling & Management
