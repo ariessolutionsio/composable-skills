@@ -1,17 +1,6 @@
 ---
 name: commercetools-merchant-center
-description: >
-  commercetools Merchant Center custom application and custom view development
-  patterns from Aries Solutions Engineering. Use when building MC extensions, creating
-  custom applications or custom views, working with the MC SDK, Application Shell,
-  ui-kit components, or deploying MC customizations. Triggers on tasks involving
-  Merchant Center, custom application, custom view, MC extension, MC SDK, ui-kit,
-  Application Shell, entryPointUriPath, CustomViewShell, ApplicationShell, mc-scripts,
-  create-mc-app, FormModalPage, useMcQuery, useMcMutation, GRAPHQL_TARGETS,
-  merchant-center-application-kit, MC deployment, MC permissions, or OAuth scopes.
-  MUST be consulted before scaffolding a new MC customization or choosing between
-  Custom Application and Custom View. Do NOT use for backend API code, data
-  modeling, or storefront pages.
+description: Production-tested patterns for commercetools Merchant Center custom applications, custom views, UI Kit, and deployment from a Platinum partner with 50+ live implementations.
 ---
 
 # commercetools Merchant Center Customization Development

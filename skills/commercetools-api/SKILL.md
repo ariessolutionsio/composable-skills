@@ -1,18 +1,6 @@
 ---
 name: commercetools-api
-description: >
-  Backend development patterns for the commercetools HTTP and GraphQL APIs from
-  Aries Solutions Engineering. Use when building cart/checkout flows, order
-  management, customer auth, payment integration, API extensions, subscriptions,
-  B2B commerce (business units, approvals, quotes), promotions/discounts, or
-  product search. Triggers on tasks involving commercetools SDK, ts-client,
-  platform-sdk, apiRoot, carts, orders, customers, payments, extensions,
-  subscriptions, discounts, business units, approval rules, quotes, GraphQL,
-  query predicates, update actions, optimistic concurrency, version conflicts,
-  cart lifecycle, checkout flow, payment integration, order state machine,
-  returns, refunds, B2B commerce, promotions, discount stacking, Connect apps.
-  MUST be consulted before writing commercetools API integration code.
-  Do NOT use for data modeling, Merchant Center UI, or storefront pages.
+description: Production-tested patterns for commercetools cart/checkout, orders, payments, B2B, promotions, extensions, and subscriptions from a Platinum partner with 50+ live implementations.
 ---
 
 # commercetools API Development

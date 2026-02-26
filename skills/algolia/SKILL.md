@@ -1,13 +1,6 @@
 ---
 name: algolia
-description: >
-  Algolia commerce search patterns and commercetools integration from Aries
-  Solutions Engineering. Use when implementing product search, building search
-  UI with InstantSearch, configuring ranking and relevance, syncing product
-  data from commercetools to Algolia, or optimizing search performance.
-  Triggers on tasks involving Algolia, InstantSearch, search index, facets,
-  ranking, relevance, product search, search UI, autocomplete, search
-  analytics, synonyms, rules, commercetools Algolia sync. Coming soon.
+description: Algolia commerce search patterns and commercetools integration — InstantSearch, ranking, relevance, and product sync. Coming soon.
 ---
 
 # Algolia Commerce Search
