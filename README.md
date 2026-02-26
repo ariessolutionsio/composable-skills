@@ -8,10 +8,10 @@ These skills give AI coding assistants expert-level knowledge of commercetools A
 
 | Skill | Description | Install |
 |-------|-------------|---------|
-| [commercetools-api](skills/commercetools-api/SKILL.md) | Backend API patterns — cart/checkout, orders, payments, extensions, subscriptions, B2B, promotions, search | `npx skills install ariessolutionsio/composable-skills/commercetools-api` |
-| [commercetools-data](skills/commercetools-data/SKILL.md) | Data modeling — product types, custom types/objects, categories, import/export, migration | `npx skills install ariessolutionsio/composable-skills/commercetools-data` |
-| [commercetools-merchant-center](skills/commercetools-merchant-center/SKILL.md) | MC customization — custom applications, custom views, UI Kit, deployment | `npx skills install ariessolutionsio/composable-skills/commercetools-merchant-center` |
-| [commercetools-frontend](skills/commercetools-frontend/SKILL.md) | Storefront development — Next.js, React, SSR/SSG, commercetools Frontend, performance, SEO | `npx skills install ariessolutionsio/composable-skills/commercetools-frontend` |
+| [commercetools-api](skills/commercetools-api/SKILL.md) | Backend API patterns — cart/checkout, orders, payments, extensions, subscriptions, B2B, promotions, search | `npx skills add ariessolutionsio/composable-skills --skill commercetools-api` |
+| [commercetools-data](skills/commercetools-data/SKILL.md) | Data modeling — product types, custom types/objects, categories, import/export, migration | `npx skills add ariessolutionsio/composable-skills --skill commercetools-data` |
+| [commercetools-merchant-center](skills/commercetools-merchant-center/SKILL.md) | MC customization — custom applications, custom views, UI Kit, deployment | `npx skills add ariessolutionsio/composable-skills --skill commercetools-merchant-center` |
+| [commercetools-frontend](skills/commercetools-frontend/SKILL.md) | Storefront development — Next.js, React, SSR/SSG, commercetools Frontend, performance, SEO | `npx skills add ariessolutionsio/composable-skills --skill commercetools-frontend` |
 | [akeneo](skills/akeneo/SKILL.md) | Akeneo PIM development and commercetools integration | *Coming soon* |
 | [algolia](skills/algolia/SKILL.md) | Algolia commerce search and commercetools integration | *Coming soon* |
 
@@ -21,12 +21,12 @@ Install individual skills into your project:
 
 ```bash
 # Install a single skill
-npx skills install ariessolutionsio/composable-skills/commercetools-api
+npx skills add ariessolutionsio/composable-skills --skill commercetools-api
 
 # Install multiple skills
-npx skills install ariessolutionsio/composable-skills/commercetools-api
-npx skills install ariessolutionsio/composable-skills/commercetools-data
-npx skills install ariessolutionsio/composable-skills/commercetools-frontend
+npx skills add ariessolutionsio/composable-skills --skill commercetools-api
+npx skills add ariessolutionsio/composable-skills --skill commercetools-data
+npx skills add ariessolutionsio/composable-skills --skill commercetools-frontend
 ```
 
 After installation, your AI assistant will automatically consult the skill when working on matching tasks.
