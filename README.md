@@ -12,8 +12,8 @@ These skills give AI coding assistants expert-level knowledge of commercetools A
 | [commercetools-data](skills/commercetools-data/SKILL.md) | Data modeling — product types, custom types/objects, categories, import/export, migration | `npx skills add ariessolutionsio/composable-skills --skill commercetools-data` |
 | [commercetools-merchant-center](skills/commercetools-merchant-center/SKILL.md) | MC customization — custom applications, custom views, UI Kit, deployment | `npx skills add ariessolutionsio/composable-skills --skill commercetools-merchant-center` |
 | [commercetools-frontend](skills/commercetools-frontend/SKILL.md) | Storefront development — Next.js, React, SSR/SSG, commercetools Frontend, performance, SEO | `npx skills add ariessolutionsio/composable-skills --skill commercetools-frontend` |
-| [akeneo](skills/akeneo/SKILL.md) | Akeneo PIM development and commercetools integration | *Coming soon* |
-| [algolia](skills/algolia/SKILL.md) | Algolia commerce search and commercetools integration | *Coming soon* |
+| [akeneo](skills/akeneo/SKILL.md) | Akeneo PIM development | *Coming soon* |
+| [algolia](skills/algolia/SKILL.md) | Algolia commerce search | *Coming soon* |
 
 ## Installation
 
