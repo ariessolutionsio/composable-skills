@@ -34,6 +34,18 @@ When a task matches the keywords below, load the corresponding skill's SKILL.md 
 **Load for:** Marketplacer, marketplace platform, multi-vendor, multi-seller, Operator API (GraphQL), Seller API, Advert, Variant, Golden Product, Invoice, Order splits, RefundRequest, CommissionPackage, MPay, Airwallex, deposit-and-reconcile, RemittanceAdvice, Taxon, Prototype, marketplace webhooks, HMAC webhook verification, ExternalIds, marketplace commission, marketplace payouts, multi-seller cart, per-seller fulfillment, seller onboarding, marketplace operator integration.
 → [skills/marketplacer/SKILL.md](skills/marketplacer/SKILL.md)
 
+### kibo-ecommerce (in development)
+**Load for:** Kibo Commerce, Kibo eCommerce, x-vol-tenant, x-vol-site, x-vol-master-catalog, MasterCatalog, Kibo catalog, Kibo product, Kibo cart, Kibo checkout, Kibo storefront, Kibo B2B, Kibo promotions, API Extensions, Arc.js, Event Subscription, @kibocommerce/rest-sdk, KiboSoftware, Kibo OAuth, Kibo App Key, KiboCommerce GraphQL storefront.
+→ [skills/kibo-ecommerce/SKILL.md](skills/kibo-ecommerce/SKILL.md)
+
+### kibo-oms (in development)
+**Load for:** Kibo OMS, Kibo Order Management, Kibo fulfillment, order routing, BOPIS Kibo, ship-from-store, kibo-fulfillment-workflows, fulfiller, fulfillment task, RMA Kibo, Kibo returns, Kibo inventory location, Kibo dropship, Kibo carrier integration, Kibo agentic order routing, standalone OMS, OMS behind Shopify/SFCC.
+→ [skills/kibo-oms/SKILL.md](skills/kibo-oms/SKILL.md)
+
+### kibo-subscriptions (in development)
+**Load for:** Kibo Subscription Commerce, subscriptionCreate, subscription cycle, subscription pause, subscription skip, subscription swap, dunning, recurring billing Kibo, evergreen subscription, fixed-term subscription, subscribe and save, subscription churn, subscription retention.
+→ [skills/kibo-subscriptions/SKILL.md](skills/kibo-subscriptions/SKILL.md)
+
 ## Cross-Skill Combinations
 
 Some tasks benefit from loading multiple skills:
@@ -50,6 +62,11 @@ Some tasks benefit from loading multiple skills:
 | Marketplace on commercetools | marketplacer + commercetools-api + commercetools-data |
 | Marketplace catalog from a PIM | marketplacer + akeneo |
 | Marketplace storefront with search | marketplacer + algolia + commercetools-frontend |
+| Full Kibo implementation (commerce + fulfillment) | kibo-ecommerce + kibo-oms |
+| Kibo OMS behind a non-Kibo storefront (Shopify, SFCC, etc.) | kibo-oms |
+| Kibo Subscriptions with bundled commerce | kibo-subscriptions + kibo-ecommerce + kibo-oms |
+| Kibo eCommerce fronting a Marketplacer marketplace | kibo-ecommerce + marketplacer |
+| Migrating commercetools clients to Kibo (or vice versa) | kibo-ecommerce + commercetools-api |
 
 ## MCP Complement
 
