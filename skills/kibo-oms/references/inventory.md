@@ -4,7 +4,7 @@ Kibo's inventory model has one rule that determines everything else: **inventory
 
 ## Table of Contents
 - [Location-Scoped Inventory](#location-scoped-inventory)
-- [The Nine Quantity Types](#the-nine-quantity-types)
+- [Quantity Types and Routing Signals](#quantity-types-and-routing-signals)
 - [Available and ATP Formulas](#available-and-atp-formulas)
 - [Granular Inventory Fields](#granular-inventory-fields)
 - [Allocations and Reservations](#allocations-and-reservations)
@@ -40,23 +40,31 @@ The aggregate (298) is not stored anywhere — it's computed by summing the loca
 
 **This is the CRITICAL anti-pattern.** Sync aggregate-only inventory to a storefront and that storefront promises stock that doesn't exist at the locations that can fulfill the order. See [Inventory Sync to External Storefronts](#inventory-sync-to-external-storefronts) for the mitigation.
 
-## The Nine Quantity Types
+## Quantity Types and Routing Signals
 
 Source: <https://docs.kibocommerce.com/help/inventory-quantity-types>
 
-Inventory at a (UPC × Location) carries nine quantity-type values:
+Kibo's documented inventory quantity types are six. Several additional values surface in the API (`floor`, `deliveryDate`) and the routing engine consumes derived signals (LTD age, Excess inventory) — those are real concepts but not themselves "quantity types."
+
+### The six documented quantity types
 
 | Type | Definition | Computed or stored |
 |------|------------|---------------------|
 | **On Hand** | Physical units at the location | Stored (source of truth from WMS / cycle count) |
 | **Allocated** | Reserved by confirmed orders / accepted shipments | Stored (incremented by accept, decremented by ship / cancel) |
-| **Pending** | Overallocated; waiting for replenishment to convert to Allocated | Stored (incremented by backorder accept) |
+| **Pending Items** | Overallocated; waiting for replenishment to convert to Allocated | Stored (incremented by backorder accept) |
 | **Safety Stock** | Withheld buffer not visible as Available | Stored |
-| **Floor** | Minimum-on-hand target — replenishment trigger | Stored, **analytical only — not enforced by routing** |
-| **LTD** (Lifetime-to-Date) | Inventory age | Computed — drives the LTD sort dimension in routing |
-| **Excess** | Available beyond the configured Excess Inventory Threshold | Computed — drives the Excess sort dimension in routing |
-| **Future** | Confirmed incoming stock within a configurable future window | Stored |
 | **Available** | The sellable number | Computed (see formula below) |
+| **ATP** (Available-to-Promise) | Available plus Future inventory when the Future-ATP tenant setting is on | Computed |
+
+### Related fields and routing signals (not quantity types)
+
+| Concept | What it is | Where it surfaces |
+|---------|------------|--------------------|
+| `floor` | Minimum-on-hand target — replenishment trigger | Field on the inventory record; analytical / replenishment, not enforced by routing |
+| `Future` inventory | Confirmed incoming stock with a known `deliveryDate` | Separate concept that feeds into ATP, not a quantity type on a current inventory record |
+| Inventory **LTD** (Lifetime-to-Date) | Inventory age — days the oldest unit has been at the location | Computed metric the routing engine can sort on |
+| **Excess** | `Available − ExcessThreshold` (floored at 0) | Computed metric the routing engine can sort on |
 
 ### Available and ATP Formulas
 
@@ -79,7 +87,7 @@ Example:
   ATP (with Future)                  = 65 + 50 = 115
 ```
 
-The `Excess` value is `Available − ExcessThreshold`, floored at 0; the `LTD` is the count of inventory-aging days for the oldest stock at the location. Both are computed and used as Sort inputs by the routing engine (see `order-routing.md`).
+`Excess` and `LTD` are not stored quantity types — they're metrics the routing engine computes per (UPC × Location) for use as Sort inputs (see `order-routing.md`).
 
 ## Granular Inventory Fields
 

@@ -164,18 +164,23 @@ async function swapSku(subscriptionId: string, oldSku: string, newSku: string) {
 
 Changes the cadence at which continuity Orders are cut. `nextOrderDate` is recomputed from the change moment.
 
-**API:** SDK method or read-modify-write resource PUT.
+**API:** Kibo publishes a dedicated `PUT /commerce/subscriptions/{subscriptionId}/frequency` endpoint that takes just the new frequency body — narrower than a full resource PUT and therefore safer than the read-modify-write pattern (no risk of nulling other fields). A full read-modify-write resource PUT also works as a fallback. There is no `POST /actions/updateFrequency` action — that pattern doesn't exist on the Subscriptions API; prefer the dedicated frequency endpoint.
 
 ```typescript
 async function changeFrequency(subscriptionId: string, frequency: Frequency) {
-  const current = await getSubscription(subscriptionId);
-  const updated = {
-    ...current,
-    frequency,
-  };
-  await putSubscription(subscriptionId, updated);
+  // Preferred: dedicated frequency endpoint (no risk of nulling other fields)
+  await fetch(`/commerce/subscriptions/${subscriptionId}/frequency`, {
+    method: 'PUT',
+    body: JSON.stringify(frequency),
+  });
+
+  // Fallback: full read-modify-write on the resource
+  // const current = await getSubscription(subscriptionId);
+  // await putSubscription(subscriptionId, { ...current, frequency });
 }
 ```
+
+The same narrow-endpoint pattern exists for next order date: `PUT /commerce/subscriptions/{id}/nextorderdate`. Verify exact endpoint shapes against <https://apidocs.kibocommerce.com/?spec=commerce-subscription>.
 
 **Effect on `nextOrderDate`.** The platform recomputes it. The **exact behavior across pause/resume + frequency-change combinations is unknown — verify against your live tenant.** Specifically: if a Subscription is paused, then its frequency is changed, then it is resumed, the resulting `nextOrderDate` could be:
 

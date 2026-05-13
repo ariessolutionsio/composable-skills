@@ -224,7 +224,12 @@ Body:
 }
 ```
 
-`required: true` flips the line item from one-time to subscribed. The Subscription itself is then materialized by the order-placement flow — you do not call `POST /commerce/subscriptions` from the storefront for a normal checkout. That endpoint exists for offline / CSR / import flows.
+`required: true` flips the line item from one-time to subscribed. How the Subscription resource itself comes into existence varies by deployment pattern:
+
+- The common storefront pattern is for the order-placement workflow to create the Subscription as a side-effect of submitting an order that contains a subscribed line, so the storefront doesn't need an explicit `POST /commerce/subscriptions` call.
+- For offline / CSR / import / catalog-migration flows, the explicit `POST /commerce/subscriptions` endpoint creates the Subscription directly from a Subscription payload (not a Cart / Order).
+
+Treat which path applies as something to **verify against the tenant** — the side-effect-of-order-submit path is widely used but not exhaustively documented, and some integration patterns explicitly call `POST /commerce/subscriptions` from a server-side handler after order submission. See the `Subscription` endpoints in the public API reference (<https://apidocs.kibocommerce.com/?spec=commerce-subscription>) for the canonical create surface.
 
 **Trial mechanics.** When `trial.enabled` is true and `substituteProductCode` is set, the initial Order ships the substitute product. The first full-price continuity Order is cut `trial.duration` days after the initial Order. See `billing-dunning.md` for the exact first-charge timing.
 

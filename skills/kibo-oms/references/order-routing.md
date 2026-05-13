@@ -17,6 +17,12 @@ Kibo's order routing engine is a four-level decision pipeline — **Strategy →
 - [Anti-Patterns](#anti-patterns)
 - [Checklist](#checklist)
 
+## What Routing Decides (and What It Doesn't)
+
+Before the hierarchy: routing decides the source location for **ship-from** fulfillment — Ship-to-Home, Dropship, ship-from-store, and inter-location transfers. For **In-Store Pickup (BOPIS) and Curbside**, the customer chooses the pickup location at the cart/checkout step, so the initial store assignment is fixed *before* the order is created. The routing engine does not pick a "best" pickup store for the customer. BOPIS-related routing behavior is therefore limited to follow-on cases (e.g., reassigning to a nearby store on a short-pick / decline, or Transfer sourcing the pickup store's stock from another location) — not initial assignment.
+
+This is a frequent point of confusion when designing routing rules: don't write a Scenario whose purpose is "pick the closest pickup store for this BOPIS order." The customer already made that choice.
+
 ## The Routing Hierarchy
 
 Source: <https://docs.kibocommerce.com/help/order-routing-overview>
@@ -82,29 +88,27 @@ After Actions are also where consolidation behavior is gated: with consolidation
 
 ## Location Capabilities as Filter Inputs
 
-Each Location carries a set of capability toggles that act as the primary Filter inputs:
+Each Location carries a set of capability data that acts as the primary Filter inputs. The two load-bearing pieces are the **`fulfillmentTypes` array** (which fulfillment methods this location supports) and the operational metadata (`hoursOfOperation`, `fulfillmentCapacity`, `latitude`/`longitude`).
 
-| Capability | Filter usage |
-|------------|--------------|
-| `STH` (Ship-to-Home eligible) | Excludes the location from STH strategies if off |
-| `BOPIS` | Excludes from BOPIS strategies if off |
-| `Curbside` | Excludes from Curbside strategies if off |
-| `Transfer` | Excludes from inter-location transfer sourcing if off |
-| `Delivery` | Excludes from local delivery strategies if off |
-| `Dropship` | Marks the location as a vendor-fulfilled dropship location |
-| `supportsInventory` | Excludes from inventory-aware filters if off |
-| `allowFulfillmentWithoutStock` | Permits shipping ahead of On-Hand entry (rarely used) |
-| `hoursOfOperation` + `timezone` | Time-window filters; routing to a closed store is the classic bug |
-| `fulfillmentCapacity` | N shipments per (hours/days/weeks/months) — capacity constraint |
+| Field | Documented values / shape | Filter usage |
+|-------|---------------------------|--------------|
+| `fulfillmentTypes[]` | `DirectShip` (ship-to-home), `InStorePickup` (BOPIS) | Excludes the location from strategies for the missing types. These are the *documented* enum values; refer to a location as "BOPIS-capable" if `InStorePickup ∈ fulfillmentTypes`, "STH-capable" if `DirectShip ∈ fulfillmentTypes`. |
+| `supportsInventory` | boolean | Excludes from inventory-aware filters if false |
+| `allowFulfillmentWithoutStock` | boolean | Permits shipping ahead of On-Hand entry (rarely used) |
+| `hoursOfOperation` + `timezone` | per-day open/close, IANA tz | Time-window filters; routing to a closed store is the classic bug |
+| `fulfillmentCapacity` | `{ count, period }` | N shipments per (hours/days/weeks/months) — capacity constraint |
+| `latitude` / `longitude` | decimal | Required for distance-based sort |
 
-**Wrong filter inputs cause routing to closed stores.** A common defect is to enable BOPIS at a store and forget to populate `hoursOfOperation` or `fulfillmentCapacity` — the location appears eligible, gets routed, and the customer arrives at a dark storefront. Customer-service tickets follow.
+**Other concepts (Curbside, Delivery, Dropship, Transfer)** are typically modeled as either additional `fulfillmentTypes` values (where tenant supports them), custom location attributes, or location-group memberships rather than first-class boolean fields. Verify against your tenant's Location admin API before treating any of those as a top-level field on the Location resource.
+
+**Wrong filter inputs cause routing to closed stores.** A common defect is to add `InStorePickup` to a store's `fulfillmentTypes` and forget to populate `hoursOfOperation` or `fulfillmentCapacity` — the location appears eligible, gets routed (for transfer sourcing or ship-from-store, since the customer picks the BOPIS store directly), and the customer arrives at a dark storefront. Customer-service tickets follow.
 
 **Anti-pattern:**
 
 ```typescript
-// Wrong — enabling BOPIS without modeling hours
+// Wrong — enabling InStorePickup without modeling hours
 await api.put(`/commerce/admin/locations/${code}`, {
-  capabilities: { BOPIS: true, STH: true },
+  fulfillmentTypes: ['DirectShip', 'InStorePickup'],
   // No hoursOfOperation, no fulfillmentCapacity — Kibo will route here 24/7.
 });
 ```
@@ -113,7 +117,7 @@ await api.put(`/commerce/admin/locations/${code}`, {
 
 ```typescript
 await api.put(`/commerce/admin/locations/${code}`, {
-  capabilities: { BOPIS: true, STH: true },
+  fulfillmentTypes: ['DirectShip', 'InStorePickup'],
   timezone: 'America/New_York',
   hoursOfOperation: [
     { dayOfWeek: 'Monday',   open: '09:00', close: '20:00' },
@@ -125,7 +129,7 @@ await api.put(`/commerce/admin/locations/${code}`, {
 });
 ```
 
-Exact field names above (`hoursOfOperation`, `fulfillmentCapacity.period`) — verify against your tenant's Location schema, as Kibo's location admin API has evolved over versions.
+Exact field shapes above (`fulfillmentTypes`, `hoursOfOperation`, `fulfillmentCapacity.period`) — verify against your tenant's Location admin API. `DirectShip` and `InStorePickup` are the documented `fulfillmentTypes` enum values.
 
 ## Filter Categories
 
@@ -301,7 +305,7 @@ URL: <https://kibocommerce.com/platform/agentic-commerce/>
 
 ### Wrong-Filter Routing to Closed Stores
 
-A location with BOPIS enabled but no `hoursOfOperation` populated is eligible 24/7. Routing sends pickup orders that the store can't honor. **Always pair capability toggles with the operational metadata that bounds them** — hours, capacity, blackout dates.
+A location with `InStorePickup` in `fulfillmentTypes` but no `hoursOfOperation` populated is eligible 24/7 for transfer sourcing and follow-on reassignment. Routing then sends work to a store that's closed. **Always pair capability data with the operational metadata that bounds it** — hours, capacity, blackout dates.
 
 ### Distance Sort Without Geocoded Locations
 
@@ -340,7 +344,7 @@ Dropship locations have different cost, latency, and capacity profiles than DCs 
 Before shipping order-routing configuration:
 
 - [ ] Every location has `latitude` / `longitude` populated if distance sort is in use.
-- [ ] Every BOPIS / Curbside / Delivery-capable location has `hoursOfOperation` and `timezone` set.
+- [ ] Every `InStorePickup`-capable location has `hoursOfOperation` and `timezone` set (BOPIS store assignment comes from the customer's checkout choice, but routing still drives transfer sourcing and reassignment to those stores).
 - [ ] Every store opted in to ship-from-store has a `fulfillmentCapacity` cap.
 - [ ] Each Strategy is mapped to one or more fulfillment types — no orphan Strategies.
 - [ ] Each Strategy has at least one Default Scenario as a terminal fall-through.

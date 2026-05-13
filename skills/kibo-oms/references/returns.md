@@ -21,7 +21,7 @@ Returns are a separate entity in Kibo with their own lifecycle — **not an orde
 
 A Return in Kibo is its own first-class entity with:
 
-- Its own ID and state machine (`Created → Authorized → Closed`).
+- Its own ID and state machine (`Created → ReturnAuthorized → Closed`).
 - Its own line items (subset of the original order's items, with return quantities).
 - Its own payment actions (credits, store credit, check refunds).
 - Its own routing for the inbound shipment (the RMA shipping label).
@@ -62,9 +62,9 @@ Source: <https://docs.kibocommerce.com/help/return-statuses>
 Modern flow — three states:
 
 ```
-            ┌──────────┐  authorize    ┌────────────┐  close   ┌────────┐
-init ──────►│ Created  │ ─────────────►│ Authorized │ ────────►│ Closed │
-            └──────────┘               └────────────┘          └────────┘
+            ┌──────────┐  authorize    ┌──────────────────┐  close   ┌────────┐
+init ──────►│ Created  │ ─────────────►│ ReturnAuthorized │ ────────►│ Closed │
+            └──────────┘               └──────────────────┘          └────────┘
                   │ cancel/reject              │ cancel/reject
                   ▼                            ▼
             ┌────────────────────────┐   ┌────────────────────────┐
@@ -75,12 +75,12 @@ init ──────►│ Created  │ ────────────�
 | State | Meaning |
 |-------|---------|
 | `Created` | RMA initiated; customer or operator has registered the return intent |
-| `Authorized` | Approved — return label issued, item is in flight, or item is at the receiving location |
+| `ReturnAuthorized` | Approved — return label issued, item is in flight, or item is at the receiving location |
 | `Closed` | Disposition complete, refunds settled, replacement (if any) shipped |
 | `Cancelled` | Voluntary cancellation by customer or operator before disposition |
 | `Rejected` | Operator-side rejection (e.g., outside return window, item ineligible) |
 
-**Legacy intermediate states** (`Await`, `Receive`, `Restock`, `Refund`, `Ship`) still exist on tenants that have them enabled, but the modern path is direct `Authorized → Closed`. Code that loops over the legacy states explicitly breaks on modern tenants and vice versa — check the active state set on the tenant's configuration rather than hard-coding either path.
+**Legacy intermediate states** (`Await`, `Receive`, `Restock`, `Refund`, `Ship`) still exist on tenants that have them enabled, but the modern path is direct `ReturnAuthorized → Closed`. Code that loops over the legacy states explicitly breaks on modern tenants and vice versa — check the active state set on the tenant's configuration rather than hard-coding either path.
 
 ## Return Rollup Statuses
 
@@ -97,7 +97,7 @@ The Order Return Status is the rollup view from the order's perspective. An orde
 
 ```
 ┌───────────────────┐   create    ┌──────────────────┐  authorize  ┌───────────────────┐
-│ Customer / CSR    │ ──────────► │ Return: Created  │ ──────────► │ Return: Authorized │
+│ Customer / CSR    │ ──────────► │ Return: Created  │ ──────────► │ Return: ReturnAuthorized │
 │ initiates return  │             └──────────────────┘             └───────────────────┘
 └───────────────────┘                                                       │
                                                                             │ ship inbound
@@ -162,7 +162,7 @@ Sources: <https://docs.kibocommerce.com/help/returns-api-overview>, <https://doc
 | `PerformPaymentActionForReturn` | **Credit an existing payment** (refund to original tender) |
 | `CreatePaymentActionForReturn` | Issue **store credit** or **check** (new tender) |
 | `CreateReturnShippingOrder` | Create the replacement order linked to this RMA |
-| `GetRmaLabels` | Get carrier return label |
+| `getReturnLabel` | Get carrier return label for the RMA |
 | **Disposition API** (if reverse logistics enabled) | Mark items handled per location |
 
 ## Refund Mechanics
@@ -305,7 +305,7 @@ URL: <https://kibocommerce.com/press-events/kibo-product-innovations-reverse-log
 | Topic | Fires on |
 |-------|----------|
 | `return.opened` | New return created (`Created` state) |
-| `return.authorized` | Return moves to `Authorized` |
+| `return.authorized` | Return moves to `ReturnAuthorized` |
 | `return.updated` | Mid-lifecycle update (disposition recorded, refund applied) |
 | `return.closed` | Return reaches `Closed` |
 | `return.cancelled` | Return cancelled |
@@ -331,7 +331,7 @@ In OMS-only mode, Kibo records the credit decision; the source-platform PSP inte
 
 ### Looping Over Legacy Intermediate States
 
-Tenants on the modern flow go `Created → Authorized → Closed` directly. Code that hard-codes `Await → Receive → Restock → Refund → Ship` breaks on modern tenants. Check the tenant's active state set rather than hard-coding either path.
+Tenants on the modern flow go `Created → ReturnAuthorized → Closed` directly. Code that hard-codes `Await → Receive → Restock → Refund → Ship` breaks on modern tenants. Check the tenant's active state set rather than hard-coding either path.
 
 ### Auto-Closing Returns Before Replacement Ships
 
@@ -347,7 +347,7 @@ Kibo apportions tax / shipping / discount across return lines automatically. Han
 
 ### Skipping Disposition
 
-A return that reaches Authorized but never gets disposition stays in limbo: received but not sellable. Inventory effect doesn't apply. Always record disposition (even `Bad` / `Write-off`) to close the loop.
+A return that reaches ReturnAuthorized but never gets disposition stays in limbo: received but not sellable. Inventory effect doesn't apply. Always record disposition (even `Bad` / `Write-off`) to close the loop.
 
 ### Hard-Coding Reason Codes
 
@@ -363,7 +363,7 @@ Before shipping returns code:
 - [ ] Integration listener subscribed to `payment.credited` and triggers the source-platform refund API.
 - [ ] State-machine handling tolerates both legacy intermediate states and modern direct-to-Closed flows (or explicitly targets one based on tenant config).
 - [ ] Replacement orders flow through `CreateReturnShippingOrder`, not via manual order creation.
-- [ ] Disposition is set on every return that reaches Authorized (even write-offs).
+- [ ] Disposition is set on every return that reaches ReturnAuthorized (even write-offs).
 - [ ] Inventory restock follows disposition — `Good` increments On Hand at the receiving location; `Refurbished` goes to a separate `condition` bucket; `Bad` writes off.
 - [ ] Refund method choice (credit to original tender vs store credit vs check) is explicit in the API call.
 - [ ] `PerformPaymentActionForReturn` is used for credits to original tender; `CreatePaymentActionForReturn` is reserved for new-tender refunds (store credit, check).
