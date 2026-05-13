@@ -30,6 +30,10 @@ When a task matches the keywords below, load the corresponding skill's SKILL.md 
 **Load for:** Algolia, InstantSearch, search index, facets, ranking, relevance, product search UI, autocomplete, search analytics, synonyms, query rules.
 → [skills/algolia/SKILL.md](skills/algolia/SKILL.md)
 
+### marketplacer
+**Load for:** Marketplacer, marketplace platform, multi-vendor, multi-seller, Operator API (GraphQL), Seller API, Advert, Variant, Golden Product, Invoice, Order splits, RefundRequest, CommissionPackage, MPay, Airwallex, deposit-and-reconcile, RemittanceAdvice, Taxon, Prototype, marketplace webhooks, HMAC webhook verification, ExternalIds, marketplace commission, marketplace payouts, multi-seller cart, per-seller fulfillment, seller onboarding, marketplace operator integration.
+→ [skills/marketplacer/SKILL.md](skills/marketplacer/SKILL.md)
+
 ## Cross-Skill Combinations
 
 Some tasks benefit from loading multiple skills:
@@ -43,6 +47,9 @@ Some tasks benefit from loading multiple skills:
 | Full-stack commerce feature | commercetools-api + commercetools-data + commercetools-frontend |
 | PIM-to-commerce pipeline | akeneo + commercetools-data + commercetools-api |
 | Search-powered storefront | algolia + commercetools-frontend + commercetools-data |
+| Marketplace on commercetools | marketplacer + commercetools-api + commercetools-data |
+| Marketplace catalog from a PIM | marketplacer + akeneo |
+| Marketplace storefront with search | marketplacer + algolia + commercetools-frontend |
 
 ## MCP Complement
 

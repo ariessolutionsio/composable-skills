@@ -8,3 +8,9 @@ Thumbs.db
 .agents
 .claude
 TODO
+
+# Local benchmark workspaces (skill-benchmark harness output)
+*-workspace/
+
+# Per-skill eval prompt sets (kept private)
+skills/*/evals/

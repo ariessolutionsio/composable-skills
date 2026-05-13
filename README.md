@@ -14,6 +14,7 @@ These skills give AI coding assistants expert-level knowledge of commercetools A
 | [commercetools-frontend](skills/commercetools-frontend/SKILL.md) | Storefront development — Next.js, React, SSR/SSG, commercetools Frontend, performance, SEO | `npx skills add ariessolutionsio/composable-skills --skill commercetools-frontend` |
 | [akeneo](skills/akeneo/SKILL.md) | Akeneo PIM development | *Coming soon* |
 | [algolia](skills/algolia/SKILL.md) | Algolia commerce search | *Coming soon* |
+| [marketplacer](skills/marketplacer/SKILL.md) | Marketplacer operator integration — GraphQL Operator API, per-seller order splits, MPay payouts, caller-shaped webhooks, Golden Product PIM sync | `npx skills add ariessolutionsio/composable-skills --skill marketplacer` |
 
 ## Installation
 
