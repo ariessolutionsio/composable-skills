@@ -52,7 +52,7 @@ Concretely:
 |---------|----------|
 | Product code, productType, options/properties/extras definitions | Master Catalog |
 | Weight, dimensions, mustShipAlone, fulfillmentTypesSupported | Master Catalog |
-| Status (active/draft), active dates, isVisibleInStorefront | Catalog (child) |
+| Per-catalog visibility flag `isActive` on `ProductInCatalogInfo`, active dates | Catalog (child) — set via `PUT /commerce/catalog/admin/products/{productCode}/ProductInCatalogs/{catalogId}` |
 | Category assignments | Catalog (child) |
 | Price-list selection / overrides | Catalog (child) |
 | Localized content (productName, description, slug) | Catalog (child), localized per locale |
@@ -96,7 +96,7 @@ Core fields, from the catalog concept guide:
 | `productCode` | Unique internal identifier / SKU root |
 | `productType` | Template that determines available attributes. **Attribute schema is on the product type, not the product.** |
 | `productUsage` | `Standard`, `Bundle`, or `Configurable` (product with variations) |
-| `content` | Localized container: `productName`, `seoFriendlyUrl` (slug), `metaTagTitle`, `metaTagDescription`, `productShortDescription`, `productFullDescription` |
+| `content` | Wrapper that holds two parallel per-locale arrays: `localizedContent[]` (productName, descriptions, meta tags) and `localizedSEOContent[]` (`seoFriendlyUrl` / slug, SEO redirects). `localeCode` uses underscore format (`en_US`). |
 | `price` | Pricing block — but real pricing comes from Price Lists, see below |
 | `fulfillmentTypesSupported` | Array of fulfillment codes (e.g. `DirectShip`, `InStorePickup`) |
 | `mustShipAlone` | If true, this product ships in its own package |
@@ -259,29 +259,39 @@ For most B2C catalogs, native search is sufficient. Teams that need vector searc
 
 ## Locale and Localized Content
 
-As of API v2 (post-May 2024), category and product content live under `localizedContent` arrays — each entry tagged with a locale code, plus a default locale fallback. Legacy clients can pin `x-api-version: "1"` for the pre-localized shape, but new code should consume v2.
+As of API v2 (post-May 2024), product content lives under **two parallel per-locale arrays**: `localizedContent[]` (display content — productName, descriptions, meta tags) and `localizedSEOContent[]` (SEO-only fields — `seoFriendlyUrl` / slug, SEO redirects). The two arrays are keyed by `localeCode` independently. Legacy clients can pin `x-api-version: "1"` for the pre-localized shape, but new code should consume v2.
+
+**Locale code format:** Kibo's schema uses **underscore** (`en_US`, `fr_FR`, `fr_CA`), not the IETF hyphen format (`en-US`). The hyphen format appears in some docs prose and in `x-vol-locale` examples; the schema enum value is the underscore form. If you write `en-US` into a `localeCode` field, validation will reject or silently drop it depending on the endpoint.
 
 ```jsonc
 // product.content (v2 shape)
 {
   "localizedContent": [
     {
-      "localeCode": "en-US",
+      "localeCode": "en_US",
       "productName": "Red Cotton T-Shirt",
-      "seoFriendlyUrl": "red-cotton-tshirt",
       "productShortDescription": "..."
     },
     {
-      "localeCode": "fr-FR",
+      "localeCode": "fr_FR",
       "productName": "T-shirt en coton rouge",
-      "seoFriendlyUrl": "tshirt-coton-rouge",
       "productShortDescription": "..."
+    }
+  ],
+  "localizedSEOContent": [
+    {
+      "localeCode": "en_US",
+      "seoFriendlyUrl": "red-cotton-tshirt"
+    },
+    {
+      "localeCode": "fr_FR",
+      "seoFriendlyUrl": "tshirt-coton-rouge"
     }
   ]
 }
 ```
 
-The dual-level model: **supported locales are declared at the Master Catalog level** (which locales the master allows), while **per-locale content overrides live at the child Catalog level** (the actual `localizedContent` entries — productName, slug, description per locale). A multi-locale storefront uses per-locale entries in `localizedContent`, or a per-locale child catalog where the override surface is larger. The runtime locale resolution context comes from `x-vol-locale` on the request.
+The dual-level model: **supported locales are declared at the Master Catalog level** (which locales the master allows), while **per-locale content overrides live at the child Catalog level** (the actual `localizedContent[]` and `localizedSEOContent[]` entries — productName, slug, description per locale). A multi-locale storefront uses per-locale entries in those arrays, or a per-locale child catalog where the override surface is larger. The runtime locale resolution context comes from `x-vol-locale` on the request.
 
 ## Anti-Pattern / Recommended-Pattern Pairs
 
@@ -405,14 +415,27 @@ Consequence: pollutes the storefront facet space (Akeneo ID surfaces as a filter
 **Recommended.** Use the **Entities API** for sync-state and foreign keys:
 
 ```typescript
-// Custom entity list keyed by PIM ID
+// Custom entity list keyed by PIM ID.
 // REST endpoint: PUT /platform/entitylists/{entityListFullName}/entities/{id}
-//   (same identifier name in both the REST path and the SDK call)
-await api.platform.entities.upsert({
+//                POST /platform/entitylists/{entityListFullName}/entities
+// SDK exposes insertEntity() and updateEntity() (no upsert helper — branch on existence yourself):
+const existing = await api.platform.entities.getEntity({
   entityListFullName: 'pimSync@tenant',
   id: 'AKE-12345',
-  body: { productCode: 'TSHIRT-001', lastSyncedAt: '2026-05-13T10:00:00Z' },
-});
+}).catch(() => null);
+
+if (existing) {
+  await api.platform.entities.updateEntity({
+    entityListFullName: 'pimSync@tenant',
+    id: 'AKE-12345',
+    body: { productCode: 'TSHIRT-001', lastSyncedAt: '2026-05-13T10:00:00Z' },
+  });
+} else {
+  await api.platform.entities.insertEntity({
+    entityListFullName: 'pimSync@tenant',
+    body: { id: 'AKE-12345', productCode: 'TSHIRT-001', lastSyncedAt: '2026-05-13T10:00:00Z' },
+  });
+}
 ```
 
 Properties stay clean and storefront-shaped; foreign-system state lives where it can be queried by source-system key. The `entityListFullName` identifier (`<listname>@<tenant>`) is the same in both the SDK call and the REST path.

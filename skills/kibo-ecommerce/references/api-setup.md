@@ -413,7 +413,7 @@ Foundational facts:
 - **Payload is thin.** Kibo POSTs `eventID`, `topic`, `entityID`, `timestamp`, `correlationID`, `isTest`, and a topic-specific `extendedProperties` object — **not** the full entity.
 - **20-second response deadline.** Return `200 OK` within 20 s or it's treated as a failed delivery.
 - **Retry schedule** (production only — sandboxes do not retry): 5 min → 1 hr → 6 hr → 24 hr → 24 hr.
-- **24 hours of continuous failure auto-disables the subscription.** **14-day expiry** for undelivered events.
+- **24 hours of continuous failure auto-disables the subscription.** After auto-disable, push-mode events are considered undeliverable (Kibo docs cite ~24-hour push expiry). Pull-mode retention is longer (community-cited ~14 days); verify the pull-mode window against your tenant before depending on it for replay.
 - **At-least-once delivery** (dedupe on `eventID`), **out-of-order across topics** (don't assume `order.opened` arrives before `payment.captured`).
 
 **Anti-Pattern (trusting payload data for state):**

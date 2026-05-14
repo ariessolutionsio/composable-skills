@@ -330,7 +330,7 @@ app.post('/kibo/webhook', async (req, res) => {
 | Retry schedule (production only) | 5 min → 1 hr → 6 hr → 24 hr → 24 hr |
 | Sandboxes | **Do not retry** — single delivery attempt |
 | Auto-disable | **24 hours of continuous failure auto-disables the subscription** |
-| Event expiry | **14 days** for undelivered events |
+| Event expiry | Push-mode events expire ~**24 hours** after subscription auto-disable; pull-mode retention is longer (~14 days, verify per tenant) |
 
 The 24-hour auto-disable is the operational hazard. A receiver that's been down overnight wakes up to find the subscription disabled — events that happened during the outage are queued for the retry window but **new events stop arriving** until someone re-enables the subscription in Dev Center.
 
@@ -343,7 +343,7 @@ The 24-hour auto-disable is the operational hazard. A receiver that's been down 
 await kibo.platform.subscriptions.enable(subscriptionId);
 ```
 
-Events that aged past the 14-day expiry are gone. Events that were in the retry window when the subscription auto-disabled may or may not replay depending on where in the retry schedule they were.
+Push-mode events that aged past the ~24-hour delivery-failure window are gone (Kibo's documented push expiry); pull-mode retention is wider but tenant-specific. Events that were in the retry window when the subscription auto-disabled may or may not replay depending on where in the retry schedule they were.
 
 **Recommended.** Treat re-enable as resumption from "now," not replay. Reconcile missed state by reading entities directly (full sweep of orders modified in the outage window, etc.) rather than expecting Kibo to backfill.
 
