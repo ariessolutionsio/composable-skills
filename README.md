@@ -15,9 +15,9 @@ These skills give AI coding assistants expert-level knowledge of commercetools A
 | [akeneo](skills/akeneo/SKILL.md) | Akeneo PIM development | *Coming soon* |
 | [algolia](skills/algolia/SKILL.md) | Algolia commerce search | *Coming soon* |
 | [marketplacer](skills/marketplacer/SKILL.md) | Marketplacer operator integration — GraphQL Operator API, per-seller order splits, MPay payouts, caller-shaped webhooks, Golden Product PIM sync | `npx skills add ariessolutionsio/composable-skills --skill marketplacer` |
-| [kibo-ecommerce](skills/kibo-ecommerce/SKILL.md) | Kibo Commerce eCommerce — unified REST + GraphQL APIs, tenant/site/catalog hierarchy, OAuth, catalog, cart, checkout, B2B, promotions, built-in CMS, API Extensions, Events | *In development* |
-| [kibo-oms](skills/kibo-oms/SKILL.md) | Kibo Order Management — fulfillment workflows, order routing, location-based inventory, BOPIS / ship-from-store, returns, standalone OMS behind external commerce platforms | *In development* |
-| [kibo-subscriptions](skills/kibo-subscriptions/SKILL.md) | Kibo Subscription Commerce — subscription lifecycle, plans, billing cycles, dunning, modifications, cancellation and retention | *In development* |
+| [kibo-ecommerce](skills/kibo-ecommerce/SKILL.md) | Kibo Commerce eCommerce — unified REST + GraphQL APIs, tenant/site/catalog hierarchy, OAuth, catalog, cart, checkout, B2B, promotions, built-in CMS, API Extensions, Events | `npx skills add ariessolutionsio/composable-skills --skill kibo-ecommerce` |
+| [kibo-oms](skills/kibo-oms/SKILL.md) | Kibo Order Management — fulfillment workflows, order routing, location-based inventory, BOPIS / ship-from-store, returns, standalone OMS behind external commerce platforms | `npx skills add ariessolutionsio/composable-skills --skill kibo-oms` |
+| [kibo-subscriptions](skills/kibo-subscriptions/SKILL.md) | Kibo Subscription Commerce — subscription lifecycle, plans, billing cycles, dunning, modifications, cancellation and retention | `npx skills add ariessolutionsio/composable-skills --skill kibo-subscriptions` |
 
 ## Installation
 
