@@ -301,7 +301,9 @@ await createSubscription({
 ```typescript
 // Recommended — automate the cancellation explicitly, or use an installment plan
 async function cancelAfterCycles(subscriptionId: string, targetCycles: number) {
-  const orders = await getContinuityOrders({ subscriptionNumber: subscriptionId });
+  // Orders carry subscriptionIds[] back-references; query Orders where
+  // subscriptionIds contains this subscription's id
+  const orders = await getContinuityOrders({ subscriptionId });
   if (orders.length >= targetCycles) {
     await cancelSubscription(subscriptionId, { reasonCode: 'TERM_COMPLETE' });
   }

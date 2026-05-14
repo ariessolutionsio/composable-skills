@@ -118,7 +118,7 @@ The internal scheduler runs every ~30 minutes. Creating a Subscription in a sand
 
 ### Treating the Subscription's First Order as a Continuity Order
 
-The initial Order at checkout has `orderType: "initialSubscription"` — it's not a continuity Order. Continuity Orders begin after the initial. Reporting that lumps the initial Order in with continuities will misattribute first-purchase metrics; reporting that filters them out cleanly needs to read `orderType`. See `subscription-model.md`.
+The initial Order at checkout is not a continuity Order. Continuity Orders begin after the initial and carry the boolean `isContinuityOrder: true` plus `continuityOrderOrdinal` on the Order entity. Reporting that lumps the initial Order in with continuities misattributes first-purchase metrics; reporting that filters them out cleanly should key on `isContinuityOrder`. See `subscription-model.md`.
 
 ### Mutating Cycle Orders Across Cycles
 

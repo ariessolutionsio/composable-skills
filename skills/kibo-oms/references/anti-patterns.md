@@ -130,7 +130,7 @@ The inventory sync from Kibo to the source is eventual, not synchronous. Under l
 
 ### Conflating Backorder, Out-of-Stock, and Pre-Order
 
-`Pending Items` (Kibo's opt-in backorder buffer — one of the six documented quantity types), unallocatable-zero (out of stock), and confirmed-future inventory (a separate concept that feeds ATP; not itself one of the documented quantity types) are different states. Conflating them produces wrong delivery-promise dates and inventory accounting drift. See `inventory.md`.
+`Pending` (Kibo's opt-in backorder buffer — one of the stored quantity types), unallocatable-zero (out of stock), and `Future` (confirmed incoming stock with a `deliveryDate`) are different states with different downstream effects on promise dates. Conflating them produces wrong delivery-promise dates and inventory accounting drift. See `inventory.md` for the full quantity-type catalogue.
 
 ### Modeling Source-Platform Inventory as a Single Per-SKU Number When Network Has Nuance
 
@@ -140,7 +140,7 @@ BOPIS-eligible inventory at a store, ship-only inventory at a DC, and dropship-o
 
 ### Modeling Returns as an Order Edit
 
-Returns / RMA is a separate entity with its own state machine (`Created → ReturnAuthorized → Closed`). Treating return as an `UpdateOrder` mutation produces stuck states, miscounted inventory, and incorrect webhook subscriptions. See `returns.md`.
+Returns / RMA is a separate entity with its own state machine (`Created → Authorized → Closed`). Treating return as an `UpdateOrder` mutation produces stuck states, miscounted inventory, and incorrect webhook subscriptions. See `returns.md`.
 
 ### Assuming Kibo Refunds via the PSP Automatically
 

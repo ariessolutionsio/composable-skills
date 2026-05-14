@@ -43,7 +43,7 @@ description: Use for Kibo Order Management (OMS) implementation — design order
 
 | Pattern | File | Impact |
 |---------|------|--------|
-| Location capability data lives on the `fulfillmentTypes` array (`DirectShip`, `InStorePickup`) plus operational metadata (`hoursOfOperation`, `fulfillmentCapacity`) | [references/order-routing.md](references/order-routing.md) | Routing rules that ignore the actual capability fields try to fulfill from locations that can't handle the line |
+| Location capability data lives on the `fulfillmentTypes` array (values commonly modeled as "Direct Ship" / "In-Store Pickup" — verify exact enum strings against your tenant's Location admin API) plus operational metadata (`hoursOfOperation`, `fulfillmentCapacity`) | [references/order-routing.md](references/order-routing.md) | Routing rules that ignore the actual capability fields try to fulfill from locations that can't handle the line |
 | Refund mechanics: OMS records, PSP captures | [references/returns.md](references/returns.md) | Treating Kibo's "refunded" state as customer-side authoritative is wrong |
 | Backorder vs out-of-stock vs preorder are different states | [references/inventory.md](references/inventory.md) | Conflating produces wrong promise dates |
 | Calendar / hours / capacity per location | [references/order-routing.md](references/order-routing.md) | Routing to a closed store creates customer-service tickets |

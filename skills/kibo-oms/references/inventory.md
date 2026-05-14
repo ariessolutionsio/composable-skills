@@ -44,27 +44,22 @@ The aggregate (298) is not stored anywhere — it's computed by summing the loca
 
 Source: <https://docs.kibocommerce.com/help/inventory-quantity-types>
 
-Kibo's documented inventory quantity types are six. Several additional values surface in the API (`floor`, `deliveryDate`) and the routing engine consumes derived signals (LTD age, Excess inventory) — those are real concepts but not themselves "quantity types."
-
-### The six documented quantity types
+The documented quantity types at the (UPC × Location) level cover both stored physical-state values and computed analytical values:
 
 | Type | Definition | Computed or stored |
 |------|------------|---------------------|
 | **On Hand** | Physical units at the location | Stored (source of truth from WMS / cycle count) |
 | **Allocated** | Reserved by confirmed orders / accepted shipments | Stored (incremented by accept, decremented by ship / cancel) |
-| **Pending Items** | Overallocated; waiting for replenishment to convert to Allocated | Stored (incremented by backorder accept) |
+| **Pending** | Overallocated; waiting for replenishment to convert to Allocated | Stored (incremented by backorder accept) |
 | **Safety Stock** | Withheld buffer not visible as Available | Stored |
+| **Floor** | Minimum-on-hand target — replenishment trigger | Stored (used by replenishment policies, not enforced by routing) |
+| **Future** | Confirmed incoming stock within a configurable future window, with a `deliveryDate` | Stored |
+| **LTD** (Lifetime-to-Date) | Inventory age — days the oldest unit has been at the location | Computed (drives the LTD sort dimension in routing) |
+| **Excess** | `Available − ExcessInventoryThreshold` (floored at 0) | Computed (drives the Excess sort dimension in routing) |
+| **Excess Inventory Threshold** | The cutoff used to compute `Excess` | Stored (per-location config) |
 | **Available** | The sellable number | Computed (see formula below) |
-| **ATP** (Available-to-Promise) | Available plus Future inventory when the Future-ATP tenant setting is on | Computed |
 
-### Related fields and routing signals (not quantity types)
-
-| Concept | What it is | Where it surfaces |
-|---------|------------|--------------------|
-| `floor` | Minimum-on-hand target — replenishment trigger | Field on the inventory record; analytical / replenishment, not enforced by routing |
-| `Future` inventory | Confirmed incoming stock with a known `deliveryDate` | Separate concept that feeds into ATP, not a quantity type on a current inventory record |
-| Inventory **LTD** (Lifetime-to-Date) | Inventory age — days the oldest unit has been at the location | Computed metric the routing engine can sort on |
-| **Excess** | `Available − ExcessThreshold` (floored at 0) | Computed metric the routing engine can sort on |
+(The narrative concept "Future Available to Promise" — Available + Future — is sometimes referred to as ATP. Treat ATP as a computed view rather than a separately stored quantity type; it does not appear in the documented quantity-type list independently.)
 
 ### Available and ATP Formulas
 
@@ -87,7 +82,7 @@ Example:
   ATP (with Future)                  = 65 + 50 = 115
 ```
 
-`Excess` and `LTD` are not stored quantity types — they're metrics the routing engine computes per (UPC × Location) for use as Sort inputs (see `order-routing.md`).
+`Excess` and `LTD` are computed quantity types — the routing engine reads them per (UPC × Location) for use as Sort inputs (see `order-routing.md`).
 
 ## Granular Inventory Fields
 
@@ -130,7 +125,7 @@ Three different states; conflating them produces wrong promise dates.
 | State | Meaning | Order outcome |
 |-------|---------|---------------|
 | **Out-of-Stock** | `Available == 0` and no `Future` incoming | Order fails at routing — falls into the next Scenario or `Customer Care` |
-| **Backorder** | `Available == 0` but the tenant has `Pending Items` enabled | Order accepted; goes to `Pending Items`; converts to `Allocated` when replenishment lands |
+| **Backorder** | `Available == 0` but the tenant has the `Pending` quantity type enabled | Order accepted; goes to `Pending`; converts to `Allocated` when replenishment lands |
 | **Preorder** | `Available == 0` but `Future` inventory carries a known `deliveryDate` | Order accepted; promises shipment on the Future delivery date |
 
 **The Backorder path is opt-in.** A tenant that hasn't enabled the Pending quantity type sees `Validate Stock` failure go straight to `Reassign`, not Backorder. Don't assume backorder is universally available.

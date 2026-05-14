@@ -16,7 +16,7 @@ Kibo's OMS has one structural quirk that determines almost every integration dec
 - [Fulfillment API Surface](#fulfillment-api-surface)
 - [Shipment vs Package](#shipment-vs-package)
 - [Tasks vs Status Writes](#tasks-vs-status-writes)
-- [The Q1 2026 Order Routing Explain Agent](#the-q1-2026-order-routing-explain-agent)
+- [The Order Routing Explain Agent](#the-q1-2026-order-routing-explain-agent)
 - [Webhook Events to Subscribe](#webhook-events-to-subscribe)
 - [Anti-Patterns](#anti-patterns)
 - [Checklist](#checklist)
@@ -53,6 +53,7 @@ webhook.subscribe([
   'shipment.itemscanceled',
   'shipment.partialpickupready',
   'return.opened',
+  'return.authorized',  // fires when label is issued / item in flight
   'return.closed',
 ]);
 ```
@@ -308,9 +309,9 @@ await api.put(`/commerce/shipments/${shipmentNumber}`, { status: 'Completed' });
 
 Tasks can be **reverted** when the workflow permits (audit-friendly: a packer marks a shipment Packed, then realizes a SKU mismatch and reverts to re-pick). Tasks can also be **skipped** when the workflow permits. Both operations are first-class API calls; don't hand-roll equivalents.
 
-## The Q1 2026 Order Routing Explain Agent
+## The Order Routing Explain Agent
 
-Announced Q1 2026 as part of Kibo's broader Agentic Commerce suite. Operations can ask in natural language "why was order X routed to location Y?" and the agent surfaces:
+Part of Kibo's broader Agentic Commerce suite (recently released). Operations can ask in natural language "why was order X routed to location Y?" and the agent surfaces:
 
 - Which locations were considered.
 - Which Filters eliminated each one.

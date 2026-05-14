@@ -39,7 +39,7 @@ https://t{tenantId}-s{siteId}.{env}.{region}/graphql
 
 US sandbox is `t{id}.sandbox.mozu.com`; US production is `t{id}.tp0.mozu.com`. Kibo never finished its rebrand from "Mozu" — `home.kibocommerce.com` resolves but the SDKs, docs, and live OAuth flow all use `home.mozu.com`.
 
-**Unknown — verify with Kibo support:** EU and GCP auth host URLs (and the tenant API host patterns for those regions) are not publicly documented the way the US hosts are. Don't guess them; ask Kibo for the values that apply to your tenant before shipping a multi-region integration.
+**Non-US regions** have their own host patterns documented in the getting-started guide: EU sandbox `t{id}.sb.euw0.kibocommerce.com`, EU prod `t{id}.tp0.euw1.kibocommerce.com`; GCP regional variants under `*.gcp.kibocommerce.com` (e.g., `*.sb.usc1.gcp.kibocommerce.com`, `*.sb.euw4.gcp.kibocommerce.com`). Authentication for non-US regions is relative to the **tenant base URL**, not `home.mozu.com`. Confirm the exact host for your tenant before shipping.
 
 The site-aware vs tenant-only distinction is not cosmetic. It determines whether Kibo can resolve catalog scope from the URL or whether your code must supply it in headers — see [The `x-vol-*` Scope Headers](#the-x-vol--scope-headers).
 
@@ -473,9 +473,7 @@ Surface these explicitly so the integrator doesn't blunder into them:
 
 2. **API Extension execution and memory limits.** Public docs are silent on exact ceilings. Design for "Lambda-like" budgets — sub-second execution, no large buffer allocations, prefer streaming external HTTP — and confirm specifics with Kibo support before shipping anything that approaches those bounds.
 
-3. **EU and GCP auth host URLs and tenant API host patterns.** Not consistently documented in the same places the US hosts are. Ask Kibo for the values that apply to your tenant before shipping a multi-region integration; don't pattern-extrapolate from the US hosts.
-
-4. **45-second vs 20-second webhook response deadline.** Older docs cite 45 seconds; the live Event Subscription page cites 20 seconds. Treat 20 s as the safe ceiling for the receiver and verify against the live doc for the tenant's environment.
+3. **45-second vs 20-second webhook response deadline.** The Event Subscription overview page still cites 45 seconds; the app-specific Event Subscription pages cite 20 seconds. The docs are self-contradictory. Treat **20 seconds** as the safe ceiling for the receiver and design for the tighter budget.
 
 5. **`expires_in` units in legacy fields.** Some older Kibo docs render token lifetimes in milliseconds. The live OAuth endpoint returns seconds. Trust the server response; don't hard-code lifetimes.
 
@@ -484,7 +482,7 @@ Surface these explicitly so the integrator doesn't blunder into them:
 Before shipping any code that talks to a Kibo API:
 
 - [ ] Tenant ID, site ID, master catalog, catalog are **all** in config — not hard-coded.
-- [ ] Auth host is environment-aware (`home.mozu.com` for US prod/sandbox; EU/GCP confirmed with Kibo).
+- [ ] Auth host is region- and environment-aware: `home.mozu.com` for US prod/sandbox; EU and GCP regions auth via the tenant base URL (not `home.mozu.com`) — `t{id}.sb.euw0.kibocommerce.com`, `t{id}.tp0.euw1.kibocommerce.com`, GCP `*.gcp.kibocommerce.com`. Confirm the specific values for your tenant.
 - [ ] App Key and Shared Secret are in a secret manager, not committed.
 - [ ] Application Behaviors are least-privilege — no "Super Admin" outside isolated dev work.
 - [ ] After every Behavior change: re-installed app on sandbox, re-enabled in Dev Center, **flushed token cache**.

@@ -12,7 +12,7 @@ Kibo's order routing engine is a four-level decision pipeline — **Strategy →
 - [Routing Patterns: Inventory vs Distance vs Cost](#routing-patterns-inventory-vs-distance-vs-cost)
 - [Multi-Location Splits](#multi-location-splits)
 - [Manual Reassignment](#manual-reassignment)
-- [The Q1 2026 Order Routing Explain Agent](#the-q1-2026-order-routing-explain-agent)
+- [The Order Routing Explain Agent](#the-q1-2026-order-routing-explain-agent)
 - [Other Agentic Commerce Agents](#other-agentic-commerce-agents)
 - [Anti-Patterns](#anti-patterns)
 - [Checklist](#checklist)
@@ -92,7 +92,7 @@ Each Location carries a set of capability data that acts as the primary Filter i
 
 | Field | Documented values / shape | Filter usage |
 |-------|---------------------------|--------------|
-| `fulfillmentTypes[]` | `DirectShip` (ship-to-home), `InStorePickup` (BOPIS) | Excludes the location from strategies for the missing types. These are the *documented* enum values; refer to a location as "BOPIS-capable" if `InStorePickup ∈ fulfillmentTypes`, "STH-capable" if `DirectShip ∈ fulfillmentTypes`. |
+| `fulfillmentTypes[]` | Ship-to-home (commonly modeled as `DirectShip`) and in-store pickup (commonly modeled as `InStorePickup`) — verify exact enum strings against your tenant's Location admin API; the docs describe these in prose but the OpenAPI string values can vary by tenant version | Excludes the location from strategies for the missing types. |
 | `supportsInventory` | boolean | Excludes from inventory-aware filters if false |
 | `allowFulfillmentWithoutStock` | boolean | Permits shipping ahead of On-Hand entry (rarely used) |
 | `hoursOfOperation` + `timezone` | per-day open/close, IANA tz | Time-window filters; routing to a closed store is the classic bug |
@@ -268,9 +268,9 @@ Manual reassignment is the operational pressure valve when routing config is wro
 
 **Anti-pattern:** building automation that auto-reassigns shipments based on its own heuristics, bypassing the routing engine. The engine is the source of truth for "which location"; layered automation creates conflicting decisions and audit gaps.
 
-## The Q1 2026 Order Routing Explain Agent
+## The Order Routing Explain Agent
 
-Announced Q1 2026 as part of Kibo's broader Agentic Commerce suite. Operations can ask in natural language "why was order X routed to location Y?" and the agent surfaces:
+Part of Kibo's broader Agentic Commerce suite (recently released). Operations can ask in natural language "why was order X routed to location Y?" and the agent surfaces:
 
 - Which locations were considered.
 - Which Filters eliminated each one.

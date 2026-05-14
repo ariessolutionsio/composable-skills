@@ -55,7 +55,7 @@ Top-level fields:
 | `siteId`, `tenantId`, `currencyCode` | Scope context |
 | `items[]` | CartItems |
 | `couponCodes[]` | Successfully applied coupons |
-| `invalidCoupons[]` | `{couponCode, reasonCode, reason}` — see coupon section |
+| `invalidCoupons[]` | `{couponCode, reasonCode (int32), reason, discountId, createDate}` — see coupon section |
 | `priceListCode` | Resolved at cart create/update (see `catalog.md`) |
 | `reservationId` | Soft inventory hold token |
 | `cartMessages[]` | System notifications (oversold, removed item) |
@@ -284,12 +284,16 @@ This is the silent-bug trap. The endpoint `PUT /commerce/carts/{cartId}/coupons/
   "invalidCoupons": [
     {
       "couponCode": "SAVE20",
-      "reasonCode": "ExpiredCoupon",
-      "reason": "This coupon has expired."
+      "reasonCode": 1004,                          // int32, not a string enum
+      "reason": "This coupon has expired.",        // localized merchandiser-tuned message
+      "discountId": 12345,                          // the discount that rejected the coupon (if known)
+      "createDate": "2026-05-13T10:00:00Z"
     }
   ]
 }
 ```
+
+`reasonCode` is an **integer code**, not a string enum — code that pattern-matches on `"ExpiredCoupon"` won't work. Display `reason` (which is the localized, merchandiser-tuned text) rather than mapping codes yourself.
 
 Code that checks `response.status` and treats 200 as success will silently swallow the rejection, leaving the shopper looking at an unchanged cart with no UI feedback.
 

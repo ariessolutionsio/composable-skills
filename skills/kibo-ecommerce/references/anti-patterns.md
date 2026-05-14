@@ -122,7 +122,7 @@ Kibo does not sanitize HTML in product descriptions or CMS document content. Ren
 
 ### Hardcoding `mozu.com` (or Any Hostname) in Source
 
-Hostnames are environment- and region-specific. US patterns are documented (`t{id}.sandbox.mozu.com` for sandbox, `t{id}.tp0.mozu.com` for prod); EU and GCP regional patterns are **not publicly documented** — get them from Kibo for your tenant rather than guessing. Hardcoding any of these breaks every multi-environment promotion. Configure via env (`KIBO_AUTH_HOST` plus `KIBO_API_ENV: sandbox | production` for the SDK). See `api-setup.md`.
+Hostnames are environment- and region-specific. Documented patterns: US sandbox `t{id}.sandbox.mozu.com`, US prod `t{id}.tp0.mozu.com`; EU sandbox `t{id}.sb.euw0.kibocommerce.com`, EU prod `t{id}.tp0.euw1.kibocommerce.com`; GCP regional variants under `*.gcp.kibocommerce.com` (e.g., `*.sb.usc1.gcp.kibocommerce.com`, `*.sb.euw4.gcp.kibocommerce.com`). Hardcoding any of these breaks every multi-environment promotion. Configure via env (`KIBO_AUTH_HOST` plus `KIBO_API_ENV: sandbox | production` for the SDK). Auth for non-US regions is relative to the tenant base URL, not `home.mozu.com`. See `api-setup.md`.
 
 ### Forgetting Token Refresh
 

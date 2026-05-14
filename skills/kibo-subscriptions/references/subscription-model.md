@@ -43,7 +43,8 @@ Documented Subscription fields (verify exact casing against the live OpenAPI):
 | Field | Type | Notes |
 |-------|------|-------|
 | `id` | string | Subscription identifier; use for API calls |
-| `subscriptionNumber` | int | Human-friendly number used in admin search |
+| `number` | int | Human-friendly numeric identifier used in admin search (often referred to in narrative as "the subscription number") |
+| `parentOrderId` | string | Read-only back-reference to the initial Order that created this Subscription |
 | `customerAccountId` | int | Owning customer |
 | `email` | string | Buyer email |
 | `status` | enum | `Pending` \| `Active` \| `Paused` \| `Errored` \| `Failed` \| `Cancelled` |
@@ -56,7 +57,7 @@ Documented Subscription fields (verify exact casing against the live OpenAPI):
 | `attributes` | array | Custom attributes (scope: subscription-only OR order-and-subscription) |
 | `installmentPlanCode` | string | Optional installment plan reference (separate concept; see `billing-dunning.md`) |
 
-**`subscriptionNumber` vs `id`:** both surface in docs. The human-readable `subscriptionNumber` drives admin UI search; `id` drives API calls. Store both if you need bidirectional lookup; do not assume one is derivable from the other.
+**`number` vs `id`:** both surface in docs. The human-readable `number` (an integer) drives admin UI search; `id` (a string) drives API calls. Store both if you need bidirectional lookup; do not assume one is derivable from the other. (Note: prior versions of the skill and some informal docs use `subscriptionNumber` for this — the schema field is `number`.)
 
 **`currencyCode` is set at creation.** There is no documented "switch currency" mutation. Treat it as immutable. Whether a single tenant supports multi-currency Subscriptions the same way Orders do is **unknown** — verify against the live tenant before building a multi-currency subscription flow.
 
@@ -80,7 +81,7 @@ Documented Subscription fields (verify exact casing against the live OpenAPI):
                                                             ...
 ```
 
-The very first Order — the one placed at checkout — is the **initial subscription order**. It carries `orderType: "initialSubscription"` on the payment block. Continuity orders that follow are normal Orders linked back to the Subscription via subscription number.
+The very first Order — the one placed at checkout — is the **initial subscription order**. Subsequent continuity orders carry the boolean `isContinuityOrder: true` on the Order entity, along with `continuityOrderOrdinal` (1, 2, 3, ...) to identify which cycle. The initial order has `isContinuityOrder: false` (or absent). Continuity orders link back to their Subscription via the `subscriptionIds[]` array on the Order, and the Subscription itself carries a read-only `parentOrderId` pointing at the initial Order.
 
 **Reporting implication.** Any code that counts Subscriptions as the revenue unit is wrong. MRR is computed externally by summing continuity Orders in the period and filtering by `subscriptionNumber` (or the equivalent linkage field on the Order). Churn analysis joins Cancelled Subscriptions to the trailing N continuity Orders they generated.
 
@@ -240,15 +241,20 @@ Treat which path applies as something to **verify against the tenant** — the s
 | Attach subscription info to a cart item | PUT | `/commerce/checkouts/{checkoutId}/items/{itemId}/subscriptionInfo` |
 | Create (offline / import / CSR) | POST | `/commerce/subscriptions` |
 | Retrieve | GET | `/commerce/subscriptions/{subscriptionId}` |
-| Update (read-modify-write) | PUT | `/commerce/subscriptions/{subscriptionId}` |
-| Order now (cut a continuity order immediately) | POST | `/commerce/subscriptions/{subscriptionId}/orderNow` |
-| Change status | (status endpoint) | Active / Paused / Cancelled |
-| List cancellation reasons | GET | `/commerce/subscriptions/reasons` |
+| Update (full resource — read-modify-write) | PUT | `/commerce/subscriptions/{subscriptionId}` |
+| **Change frequency** (narrow, preferred) | PUT | `/commerce/subscriptions/{subscriptionId}/frequency` |
+| **Change next order date** (narrow, preferred) | PUT | `/commerce/subscriptions/{subscriptionId}/nextorderdate` |
+| **Skip the next cycle** | PUT | `/commerce/subscriptions/{subscriptionId}/skip` |
+| **Order now** (cut a continuity order immediately) | PUT | `/commerce/subscriptions/{subscriptionId}/ordernow` |
+| **Pause** action | PUT | `/commerce/subscriptions/{subscriptionId}/actions` with `actionName: "Pause"` |
+| **Activate** action (resume from Paused) | PUT | `/commerce/subscriptions/{subscriptionId}/actions` with `actionName: "Activate"` |
+| **Cancel** action (terminal) | PUT | `/commerce/subscriptions/{subscriptionId}/actions` with `actionName: "Cancel"` + reason code |
+| **Retry failed continuity order** | PUT | `/commerce/subscriptions/{subscriptionId}/actions` with `actionName: "RetryFailedContinuityOrder"` |
+| Update payment method | PUT | `/commerce/subscriptions/{subscriptionId}/payment` |
+| Update shipping info | PUT | `/commerce/subscriptions/{subscriptionId}/fulfillmentInfo` |
+| List cancellation reasons | GET | `/commerce/subscriptions/reasons?category=Cancel` |
 
-**Unknown — verify against the live OpenAPI:** exact REST paths for the `pause`, `skip`, and `reactivate` action endpoints. The SDK surfaces them as named methods (`updateSubscriptionStatus`, `skipSubscription`, etc.); the underlying paths are not consistently published outside the OpenAPI viewer. The two reliable patterns:
-
-1. `PUT /commerce/subscriptions/{id}` with a modified `status` field (read-modify-write).
-2. Dedicated action sub-paths under `/commerce/subscriptions/{id}/...` — confirm the exact path before coding.
+**Path-case note:** the action sub-paths are **all-lowercase** (`ordernow`, `nextorderdate`, `skip`, `frequency`) — not camelCase. Common mistakes: `orderNow`, `nextOrderDate`, and POST-vs-PUT for `ordernow` and `skip`.
 
 Auth: same OAuth 2.0 / client-credentials flow as the rest of Kibo Commerce. `tenantId`, `siteId`, `clientId`, `sharedSecret`, `authHost`. No subscription-specific scope.
 
@@ -332,7 +338,7 @@ const mrr = subscriptions.reduce((sum, s) => sum + s.total, 0);
 const orders = await getOrders({
   createdAfter: periodStart,
   createdBefore: periodEnd,
-  filter: 'orderType eq "Continuity"', // verify exact filter syntax against the live OAS
+  filter: 'isContinuityOrder eq true', // verify exact filter syntax against the live OAS
 });
 const mrr = orders.reduce((sum, o) => sum + o.total, 0);
 ```

@@ -109,7 +109,7 @@ This is the most common silent failure in Kibo dunning. Configure a rule, ship t
 ## Recycling Math: Max Retries
 
 ```
-max_retries = (Auth No of Days / Auth Repeat Interval Days) * (count of Auth Times)
+max_retries = (Auth No of Days / Auth Repeat Interval Days) * (count of Auth Time of Day slots)
 ```
 
 **Example.** `Auth No of Days = 10`, `Auth Repeat Interval Days = 2`, `Auth Time of Day = 5:30, 17:30` (2 slots).
@@ -229,7 +229,8 @@ Configured at **System -> Settings -> Installment Plans** (must be enabled by Ki
 {
   "isInstallmentOrder": true,
   "installmentNumber": 2,
-  "orderType": "initialSubscription"
+  "isContinuityOrder": false,
+  "subscriptionIds": ["sub-abc"]
 }
 ```
 

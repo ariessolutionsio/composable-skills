@@ -406,17 +406,16 @@ Consequence: pollutes the storefront facet space (Akeneo ID surfaces as a filter
 
 ```typescript
 // Custom entity list keyed by PIM ID
-// REST endpoint: PUT /platform/entitylists/{listFQN}/entities/{id}
-//   (in REST path params the list identifier is `listFQN`; in the SDK
-//    type it is typically `entityListFullName`)
+// REST endpoint: PUT /platform/entitylists/{entityListFullName}/entities/{id}
+//   (same identifier name in both the REST path and the SDK call)
 await api.platform.entities.upsert({
-  entityListFullName: 'pimSync@tenant',  // SDK alias for listFQN
+  entityListFullName: 'pimSync@tenant',
   id: 'AKE-12345',
   body: { productCode: 'TSHIRT-001', lastSyncedAt: '2026-05-13T10:00:00Z' },
 });
 ```
 
-Properties stay clean and storefront-shaped; foreign-system state lives where it can be queried by source-system key. The `listFQN` form (`pimSync@tenant`) is the same identifier in both the SDK call and the REST path — only the parameter name differs across surfaces.
+Properties stay clean and storefront-shaped; foreign-system state lives where it can be queried by source-system key. The `entityListFullName` identifier (`<listname>@<tenant>`) is the same in both the SDK call and the REST path.
 
 ## Checklist
 
