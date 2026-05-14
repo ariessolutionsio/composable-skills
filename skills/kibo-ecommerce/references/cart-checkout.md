@@ -192,7 +192,7 @@ Calling `POST .../actions` before its preconditions are met fails the action —
 
 PaymentAction input fields: `actionName`, `amount`, `currencyCode`, `manualGatewayInteraction`, `newBillingInfo`, `externalTransactionId`, `installmentPlanCode`, `cancelUrl`/`returnUrl` (for 3DS / redirect PSPs), `recaptcha`, `data` (PSP-specific payload).
 
-**Order of operations matters:** the PSP capture / authorize must happen before `SubmitOrder` for funds to be reserved against the order. Submit-before-auth orders ship with `amountRemainingForPayment > 0` and stall downstream.
+**Order of operations matters:** PSP **authorization** must happen before `SubmitOrder` so funds are reserved against the order; **capture** is deferred to fulfillment (Flexible Auto Capture is the standard pattern — see the "Authorize, don't capture, before SubmitOrder" anti-pattern). Submit-before-auth orders ship with `amountRemainingForPayment > 0` and stall downstream. The full sequence is `AuthorizePayment → SubmitOrder → CapturePayment` (on shipment).
 
 ## Promotions and Discounts
 

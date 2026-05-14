@@ -122,7 +122,7 @@ Kibo does not sanitize HTML in product descriptions or CMS document content. Ren
 
 ### Hardcoding `mozu.com` (or Any Hostname) in Source
 
-Hostnames are environment- and region-specific: US sandbox (`t{id}.sandbox.mozu.com`), US prod (`t{id}.tp0.mozu.com`), EU sandbox (`t{id}.sb.euw0.kibocommerce.com`), plus GCP regional variants. Hardcoding breaks every multi-environment promotion. Configure via env (`KIBO_API_HOST`). See `api-setup.md`.
+Hostnames are environment- and region-specific. US patterns are documented (`t{id}.sandbox.mozu.com` for sandbox, `t{id}.tp0.mozu.com` for prod); EU and GCP regional patterns are **not publicly documented** — get them from Kibo for your tenant rather than guessing. Hardcoding any of these breaks every multi-environment promotion. Configure via env (`KIBO_AUTH_HOST` plus `KIBO_API_ENV: sandbox | production` for the SDK). See `api-setup.md`.
 
 ### Forgetting Token Refresh
 
@@ -142,7 +142,7 @@ When HMAC is in play, re-stringifying parsed JSON produces a different byte sequ
 
 ### Polling for Order or Return Status
 
-The Event Subscription mechanism covers `order.created`, `order.updated`, `order.cancelled`, `order.fulfilled`, `order.closed`, `payment.authorized`, `payment.captured`, `payment.refunded`, `return.opened`, `return.closed`, `return.rejected`, and others. Polling burns rate budget and lags real state. Subscribe. See `extensions-events.md`.
+The Event Subscription mechanism covers order-, payment-, and return-lifecycle topics — `order.opened`, `order.updated`, `order.cancelled`, `order.fulfilled`, `order.closed`, `payment.captured`, `payment.refunded`, `return.opened`, `return.closed`, `return.rejected`, and others. Polling burns rate budget and lags real state. Subscribe. The canonical topic catalogue lives in `extensions-events.md` — refer to it for the verified list (and verify in your tenant's Dev Center Events screen before relying on a specific name).
 
 ### Building API Extensions for Things Events Should Handle
 
@@ -154,7 +154,7 @@ Event-subscription receivers must return 200 quickly. Returning 4xx (other than 
 
 ### Synchronous Processing in the Event Receiver
 
-Receivers have a 45-second budget to return 200. Slow handlers risk timeouts and serialize event throughput. Persist the raw event durably, ACK fast, process async. Retry schedule is 5min → 1hr → 24hr with 14-day TTL — long handler tails consume that budget. See `extensions-events.md`.
+Receivers should treat the 20-second response window as the safe ceiling (older docs cite 45 s; treat 20 s as the safe ceiling — see `extensions-events.md`). Slow handlers risk timeouts and serialize event throughput. Persist the raw event durably, ACK fast, process async. The production retry schedule is `5 min → 1 hr → 6 hr → 24 hr → 24 hr` with a 14-day TTL; long handler tails consume that budget.
 
 ### Hardcoding Tenant IDs in Source
 

@@ -195,7 +195,7 @@ International shipping is a thin layer in this skill. Tenants doing significant 
 
 ## Returns Shipping
 
-Return labels are issued via `GetRmaLabels` after the return reaches `Authorized` state. The carrier and service for return shipping can differ from outbound — many retailers use a different (cheaper, ground-only) return service even when outbound was expedited.
+Return labels are issued via `getReturnLabel` after the return reaches `ReturnAuthorized` state. The carrier and service for return shipping can differ from outbound — many retailers use a different (cheaper, ground-only) return service even when outbound was expedited.
 
 ```
 Outbound:  fedex_2_DAY      (customer paid for fast)

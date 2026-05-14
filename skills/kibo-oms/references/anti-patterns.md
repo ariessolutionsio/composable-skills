@@ -100,7 +100,7 @@ Split shipments multiply shipping cost. Enabling "Allow Split" as an After Actio
 
 ### Treating the Order Routing Explain Agent as a Routing Engine
 
-The Q1 2026 Order Routing Explain Agent is an observability / audit tool — it explains routing decisions in natural language. It does not change them. Building automation that feeds the Explain Agent's output back into routing is a category error. See `fulfillment.md`.
+The Q1 2026 Order Routing Explain Agent is an observability / audit tool — it explains routing decisions in natural language. It does not change them. Building automation that feeds the Explain Agent's output back into routing is a category error. See `order-routing.md` for the agent and the "Treating the Explain Agent as a Decision Input" entry there.
 
 ### Routing to Locations Without Capacity Constraints
 
@@ -108,7 +108,7 @@ Each Location has an optional `fulfillmentCapacity` (e.g., 50 shipments/day). Wi
 
 ### Ignoring Location Capabilities in Routing Filters
 
-Locations have per-capability flags (BOPIS-eligible, Curbside-eligible, STH-eligible, Dropship-eligible). Routing rules that don't filter on capability try to fulfill from disabled locations and surface in `Customer Care`. Always filter on the capability that matches the line's `fulfillmentMethod`. See `order-routing.md`.
+Locations declare what they can fulfill via the documented `fulfillmentTypes[]` array (values `DirectShip`, `InStorePickup`); Curbside / Dropship / Transfer are usually layered on as additional `fulfillmentTypes` values, custom location attributes, or location-group memberships. Routing rules that don't filter on those capability inputs try to fulfill from locations that can't handle the line and surface in `Customer Care`. Always filter on what the line's `fulfillmentMethod` actually maps to. See `order-routing.md`.
 
 ## Inventory Anti-Patterns
 
@@ -130,7 +130,7 @@ The inventory sync from Kibo to the source is eventual, not synchronous. Under l
 
 ### Conflating Backorder, Out-of-Stock, and Pre-Order
 
-`Pending` quantity type (Kibo's opt-in backorder buffer), unallocatable-zero (out of stock), and confirmed-future inventory (`Future` quantity type) are different states. Conflating them produces wrong delivery-promise dates and inventory accounting drift. See `inventory.md`.
+`Pending Items` (Kibo's opt-in backorder buffer — one of the six documented quantity types), unallocatable-zero (out of stock), and confirmed-future inventory (a separate concept that feeds ATP; not itself one of the documented quantity types) are different states. Conflating them produces wrong delivery-promise dates and inventory accounting drift. See `inventory.md`.
 
 ### Modeling Source-Platform Inventory as a Single Per-SKU Number When Network Has Nuance
 
@@ -140,7 +140,7 @@ BOPIS-eligible inventory at a store, ship-only inventory at a DC, and dropship-o
 
 ### Modeling Returns as an Order Edit
 
-Returns / RMA is a separate entity with its own state machine (`Created → Authorized → Closed`). Treating return as an `UpdateOrder` mutation produces stuck states, miscounted inventory, and incorrect webhook subscriptions. See `returns.md`.
+Returns / RMA is a separate entity with its own state machine (`Created → ReturnAuthorized → Closed`). Treating return as an `UpdateOrder` mutation produces stuck states, miscounted inventory, and incorrect webhook subscriptions. See `returns.md`.
 
 ### Assuming Kibo Refunds via the PSP Automatically
 
@@ -192,7 +192,7 @@ Kibo's event-notification docs are silent on HMAC body signing — verify agains
 
 ### Treating Kibo Connect Hub as a Rules Engine
 
-Connect Hub is integration plumbing — pre-built connectors for WMS, carriers, etc. It is not a customization layer. Business rules belong in API Extensions (Arc.js) or in routing Scenarios. Code that tries to express business logic in Connect Hub configuration eventually hits the ceiling. See `order-intake.md`.
+Connect Hub is integration plumbing — pre-built connectors for WMS, carriers, etc. It is not a customization layer. Business rules belong in API Extensions (Arc.js) or in routing Scenarios. Code that tries to express business logic in Connect Hub configuration eventually hits the ceiling. See `api-setup.md` for the Extensions surface and `order-routing.md` for Scenarios.
 
 ### Per-Request Auth Token Acquisition
 

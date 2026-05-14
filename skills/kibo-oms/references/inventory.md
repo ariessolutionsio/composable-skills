@@ -127,11 +127,11 @@ In OMS-only deployments fronted by Shopify / SFCC, by the time Kibo receives the
 
 Three different states; conflating them produces wrong promise dates.
 
-| State | Meaning | Quantity type |
+| State | Meaning | Order outcome |
 |-------|---------|---------------|
 | **Out-of-Stock** | `Available == 0` and no `Future` incoming | Order fails at routing — falls into the next Scenario or `Customer Care` |
-| **Backorder** | `Available == 0` but the tenant has Pending-quantity enabled | Order accepted; goes to Pending; converts to Allocated when replenishment lands |
-| **Preorder** | `Available == 0` but `Future` quantity carries a known `deliveryDate` | Order accepted; promises shipment on the Future delivery date |
+| **Backorder** | `Available == 0` but the tenant has `Pending Items` enabled | Order accepted; goes to `Pending Items`; converts to `Allocated` when replenishment lands |
+| **Preorder** | `Available == 0` but `Future` inventory carries a known `deliveryDate` | Order accepted; promises shipment on the Future delivery date |
 
 **The Backorder path is opt-in.** A tenant that hasn't enabled the Pending quantity type sees `Validate Stock` failure go straight to `Reassign`, not Backorder. Don't assume backorder is universally available.
 

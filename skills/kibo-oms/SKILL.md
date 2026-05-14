@@ -33,8 +33,8 @@ description: Use for Kibo Order Management (OMS) implementation — design order
 | Pattern | File | Impact |
 |---------|------|--------|
 | Order intake: idempotency keys and external-order-ID strategy | [references/order-intake.md](references/order-intake.md) | Without these, retries from the upstream commerce platform duplicate orders |
-| Partial shipments are first-class; sum quantities must equal ordered | [references/fulfillment.md](references/fulfillment.md) | Code that creates one shipment per order can't handle BOPIS + ship-from-warehouse mixed orders |
-| BOPIS / curbside have their own state transitions (Awaiting, Ready, Collected) | [references/fulfillment.md](references/fulfillment.md) | Treating BOPIS as "shipped immediately" breaks the pickup notification flow |
+| Partial shipments are first-class; sum of shipped quantities must be ≤ ordered (not strictly equal — backorder waves ship over time) | [references/fulfillment.md](references/fulfillment.md) | Code that creates one shipment per order can't handle BOPIS + ship-from-warehouse mixed orders, or backorder waves |
+| BOPIS / curbside have their own state transitions (`Awaiting Collection`, `Collected`) | [references/fulfillment.md](references/fulfillment.md) | Treating BOPIS as "shipped immediately" breaks the pickup notification flow |
 | Inventory adjustments (decrement, allocate, reserve, release) are distinct operations | [references/inventory.md](references/inventory.md) | Mixing them up causes phantom stock |
 | Carrier integration is per-tenant; rate shopping happens at checkout, not in OMS | [references/shipping.md](references/shipping.md) | Rates re-shopped in OMS can differ from the customer-shown rate |
 | Inventory sync to external storefront (Shopify, SFCC) is eventual, not synchronous | [references/order-intake.md](references/order-intake.md) | UI expecting real-time inventory shows stale numbers |
@@ -43,7 +43,7 @@ description: Use for Kibo Order Management (OMS) implementation — design order
 
 | Pattern | File | Impact |
 |---------|------|--------|
-| Location capabilities (ship-eligible, BOPIS-enabled, dropship) are per-location flags | [references/order-routing.md](references/order-routing.md) | Routing rules that ignore capabilities try to fulfill from disabled locations |
+| Location capability data lives on the `fulfillmentTypes` array (`DirectShip`, `InStorePickup`) plus operational metadata (`hoursOfOperation`, `fulfillmentCapacity`) | [references/order-routing.md](references/order-routing.md) | Routing rules that ignore the actual capability fields try to fulfill from locations that can't handle the line |
 | Refund mechanics: OMS records, PSP captures | [references/returns.md](references/returns.md) | Treating Kibo's "refunded" state as customer-side authoritative is wrong |
 | Backorder vs out-of-stock vs preorder are different states | [references/inventory.md](references/inventory.md) | Conflating produces wrong promise dates |
 | Calendar / hours / capacity per location | [references/order-routing.md](references/order-routing.md) | Routing to a closed store creates customer-service tickets |

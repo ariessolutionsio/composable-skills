@@ -92,15 +92,15 @@ Frequency change is constrained to frequencies supported by **every** item on th
 
 ### Designing for `cancelAtPeriodEnd`
 
-Cancel is **terminal and immediate** in Kibo. There is no `cancelAtPeriodEnd` flag. UI patterns that promise "you'll keep access until your renewal date" cannot be implemented with a single cancel call. The approximation: skip all remaining cycles and cancel after the last continuity Order ships, or pause until period end and cancel then. See `subscription-model.md`.
+Cancel is **terminal and immediate** in Kibo. There is no `cancelAtPeriodEnd` flag. UI patterns that promise "you'll keep access until your renewal date" cannot be implemented with a single cancel call. The approximation: skip all remaining cycles and cancel after the last continuity Order ships, or pause until period end and cancel then. See `retention.md` for the skip-then-cancel and pause-then-cancel workaround patterns.
 
 ### Pause Modeled as a Temporary Cancel
 
-Pause and Cancel are distinct lifecycle paths. Pause is reversible (auto-reactivates after N cycles or manual). Cancel is terminal. Treating Pause as "cancel then re-create" loses the retention signal, forces re-onboarding, and breaks customer LTV reporting. Pause is the primary retention lever in Kibo — use it. See `subscription-model.md`.
+Pause and Cancel are distinct lifecycle paths. Pause is reversible (auto-reactivates after N cycles or manual). Cancel is terminal. Treating Pause as "cancel then re-create" loses the retention signal, forces re-onboarding, and breaks customer LTV reporting. Pause is the primary retention lever in Kibo — use it. See `retention.md`.
 
 ### Skipping the Cancellation Reason Code
 
-Cancellation requires a Reason Code from the configured Subscription Reasons list (managed at System -> Settings -> General -> Subscriptions tab). Reason codes drive churn-cause reporting; without them, the operator can't separate "too expensive" from "moving away" from "got it elsewhere." Capture the reason at cancel time in the storefront/CSR UI and pass it on the cancel call. See `subscription-model.md`.
+Cancellation requires a Reason Code from the configured Subscription Reasons list (managed at System -> Settings -> General -> Subscriptions tab). Reason codes drive churn-cause reporting; without them, the operator can't separate "too expensive" from "moving away" from "got it elsewhere." Capture the reason at cancel time in the storefront/CSR UI and pass it on the cancel call. See `retention.md`.
 
 ### Address Change Applies to Current Cycle
 
@@ -150,7 +150,7 @@ The Subscription `id` is opaque. Code that pattern-matches on it, parses substri
 
 ### Synchronous Webhook Processing
 
-Webhook receivers must `200 OK` within 45 seconds or Kibo retries the delivery. Heavy synchronous processing in the handler risks the budget and serializes throughput. Persist the raw event durably (with `eventID` for idempotency), ACK fast, process async. The retry schedule is 5 min, then 1 hr, then 24 hrs, then expiry at 14 days — the receiver's persistent store is the replay source past that window. See `subscription-model.md`.
+Webhook receivers should `200 OK` within the 20-second safe ceiling (older docs cite 45 s — treat 20 s as the ceiling; see `api-setup.md`). Heavy synchronous processing in the handler risks the budget and serializes throughput. Persist the raw event durably (with `eventID` for idempotency), ACK fast, process async. The production retry schedule is `5 min → 1 hr → 6 hr → 24 hr → 24 hr`, then expiry at 14 days — the receiver's persistent store is the replay source past that window. See `subscription-model.md`.
 
 ### Trusting Webhook Payloads Without Verifying the Source
 
@@ -162,7 +162,7 @@ Customer emails (configured at System -> Settings -> General) and event notifica
 
 ### Building Reports Against `subscription.status` Alone for Involuntary Churn
 
-`status = Failed` is a snapshot. Subscriptions that recover after recycling re-enter `Active`. A daily report that counts `Failed` Subscriptions misses the recovery flow and undercounts (or double-counts, depending on direction) involuntary-churn signal. Subscribe to `subscription.statuschanged` and accumulate transitions over the period; the time-series view is the accurate one. See `billing-dunning.md`.
+`status = Errored` and `status = Failed` are both snapshots — and they mean different things. Subscriptions in `Errored` can still recover on a recycling retry and re-enter `Active`; `Failed` means recycling has exhausted retries and recovery is manual-only. A daily report that only counts `Failed` Subscriptions misses the (often larger) `Errored` cohort that hasn't resolved yet, and the involuntary-churn signal is undercounted. Subscribe to `subscription.statuschanged` and accumulate `Active → Errored → Active` and `Errored → Failed` transitions over the period; the time-series view is the accurate one. See `billing-dunning.md`.
 
 ## Quick-Scan Review Checklist
 

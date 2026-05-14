@@ -1,6 +1,6 @@
 # Catalog Data Model
 
-Kibo's catalog has a four-level hierarchy (Master Catalog → Catalog → Site → Product/Category) that drives which `x-vol-*` header you send, where you put attributes, and how publishing behaves. Most "the API returned nothing" and "we can't have different prices per brand" tickets trace back to a misunderstanding of where data lives in this hierarchy. This file is the deep dive; the request-time header contract lives in `api-setup.md`, and inventory-at-locations crosses the boundary into `kibo-oms`.
+Kibo's catalog sits within a four-level scope hierarchy (**Tenant → Master Catalog → Catalog → Site**) that drives which `x-vol-*` header you send, where you put attributes, and how publishing behaves. Product and Category records live within that hierarchy (not as another level above or below it). Most "the API returned nothing" and "we can't have different prices per brand" tickets trace back to a misunderstanding of where data lives in this scope tree. This file is the deep dive; the request-time header contract lives in `api-setup.md`, and inventory-at-locations crosses the boundary into `kibo-oms`.
 
 ## Table of Contents
 - [The Four-Level Hierarchy](#the-four-level-hierarchy)
@@ -281,7 +281,7 @@ As of API v2 (post-May 2024), category and product content live under `localized
 }
 ```
 
-The catalog (child) is where locale overrides live — the master holds the structural fields and a default-locale baseline. A multi-locale storefront uses a per-locale catalog (or per-locale entries in `localizedContent`, depending on the tenant's setup). The locale resolution context comes from `x-vol-locale` on the request.
+The dual-level model: **supported locales are declared at the Master Catalog level** (which locales the master allows), while **per-locale content overrides live at the child Catalog level** (the actual `localizedContent` entries — productName, slug, description per locale). A multi-locale storefront uses per-locale entries in `localizedContent`, or a per-locale child catalog where the override surface is larger. The runtime locale resolution context comes from `x-vol-locale` on the request.
 
 ## Anti-Pattern / Recommended-Pattern Pairs
 
@@ -406,14 +406,17 @@ Consequence: pollutes the storefront facet space (Akeneo ID surfaces as a filter
 
 ```typescript
 // Custom entity list keyed by PIM ID
+// REST endpoint: PUT /platform/entitylists/{listFQN}/entities/{id}
+//   (in REST path params the list identifier is `listFQN`; in the SDK
+//    type it is typically `entityListFullName`)
 await api.platform.entities.upsert({
-  entityListFullName: 'pimSync@tenant',
+  entityListFullName: 'pimSync@tenant',  // SDK alias for listFQN
   id: 'AKE-12345',
   body: { productCode: 'TSHIRT-001', lastSyncedAt: '2026-05-13T10:00:00Z' },
 });
 ```
 
-Properties stay clean and storefront-shaped; foreign-system state lives where it can be queried by source-system key.
+Properties stay clean and storefront-shaped; foreign-system state lives where it can be queried by source-system key. The `listFQN` form (`pimSync@tenant`) is the same identifier in both the SDK call and the REST path — only the parameter name differs across surfaces.
 
 ## Checklist
 

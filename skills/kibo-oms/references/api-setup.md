@@ -444,7 +444,7 @@ app.post('/kibo/webhook', async (req, res) => {
 });
 ```
 
-For the full event model (topic catalogue, HMAC story, cloud-event delivery, retry/expiry semantics in depth), see `extensions-events.md` in this skill.
+The Events and Extensions models are platform-wide — the same delivery shape, HMAC story, retry/expiry semantics, and Cloud-Events envelope apply across Kibo eCommerce, OMS, and Subscriptions. For the full topic catalogue and a deeper treatment of HMAC, retry/expiry, and receiver patterns, see the `kibo-ecommerce` skill's `references/extensions-events.md`; load it alongside this skill when implementing OMS-side webhook receivers.
 
 Source: <https://docs.kibocommerce.com/help/event-subscription>, <https://docs.kibocommerce.com/help/event-notifications-overview>.
 
@@ -461,7 +461,7 @@ Foundational facts:
 
 **Unknown — verify with Kibo support:** execution-time and memory ceilings for Extensions are not publicly documented. Community guidance is "treat it like a Lambda — sub-second, no large buffers." Confirm before shipping anything heavy, or move the work to an external service triggered by an Event Subscription.
 
-For the full Extension model (`functions.json` manifest, callback semantics, Promise gotchas, Extension-vs-Event decision criteria), see `extensions-events.md`.
+For the full Extension model (`functions.json` manifest, callback semantics, Promise gotchas, Extension-vs-Event decision criteria) — which is shared across all Kibo skills — see the `kibo-ecommerce` skill's `references/extensions-events.md`.
 
 Source: <https://docs.kibocommerce.com/help/introduction-api-extensions-reference>, <https://docs.kibocommerce.com/help/the-structure-of-an-api-extension-application>.
 

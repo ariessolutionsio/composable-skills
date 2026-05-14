@@ -46,14 +46,14 @@ description: Build, debug, and integrate Kibo Commerce eCommerce features — im
 | Promotion stacking rules and exclusivity | [references/cart-checkout.md](references/cart-checkout.md) | Wrong assumption about stacking produces over- or under-discounted carts |
 | Category hierarchy: slug-based vs ID-based URLs | [references/catalog.md](references/catalog.md) | URL strategy affects SEO and ISR cache shape |
 | Variant attribute vs product attribute placement | [references/catalog.md](references/catalog.md) | Attributes on the wrong entity break faceted search |
-| Authenticated punchout / cXML integration shape | [references/b2b.md](references/b2b.md) | Procurement integrations require specific session handoff that off-the-shelf B2C flows don't cover |
+| Punchout / cXML — scope verification before scoping | [references/b2b.md](references/b2b.md) | First-party support is unconfirmed in the indexed concept guides — verify with Kibo before quoting scope; b2b.md captures what is and isn't documented |
 
 ## Common Anti-Patterns (Quick Reference)
 
 | Anti-Pattern | File | Consequence |
 |--------------|------|-------------|
 | Hardcoding tenant ID / hostname in source | [references/anti-patterns.md](references/anti-patterns.md) | Breaks every multi-environment promotion |
-| Sending `x-vol-tenant` without `x-vol-site` for site-scoped calls | [references/anti-patterns.md](references/anti-patterns.md) | Silently returns master-catalog data instead of site-scoped data |
+| Missing `x-vol-site` / `x-vol-catalog` / `x-vol-master-catalog` for the call's scope | [references/anti-patterns.md](references/anti-patterns.md) | Silently returns the wrong scope's data — site calls without `x-vol-site` return master-catalog data; admin calls without `x-vol-master-catalog` return tenant-default scope |
 | Trusting Event Subscription payloads without hydrating | [references/anti-patterns.md](references/anti-patterns.md) | Receiver builds stale projections |
 | Re-stringifying parsed JSON before HMAC verification (if HMAC used) | [references/anti-patterns.md](references/anti-patterns.md) | Signature mismatch |
 | Modeling B2B customers as B2C customers + custom fields | [references/anti-patterns.md](references/anti-patterns.md) | Loses approval workflow and price-list semantics |

@@ -23,7 +23,7 @@ description: Use for Kibo Subscription Commerce work — implementing recurring 
 |---------|------|--------|
 | Tenant / site model and `x-vol-*` headers (shared with all Kibo products) | [references/api-setup.md](references/api-setup.md) | Wrong header → wrong scope |
 | A Subscription is not an Order — each cycle creates a new Order | [references/subscription-model.md](references/subscription-model.md) | Code that mutates the original Order across cycles breaks reporting and refunds |
-| Subscription lifecycle (Active, Paused, Cancelled, Failed) is distinct from Order lifecycle | [references/subscription-model.md](references/subscription-model.md) | Treating "subscription failed" the same as "order failed" produces stuck states and wrong dunning |
+| Subscription lifecycle (`Pending`, `Active`, `Paused`, `Errored`, `Failed`, `Cancelled`) is distinct from Order lifecycle; `Errored` ≠ `Failed` (Errored can auto-recover via recycling, Failed is recycling-exhausted) | [references/subscription-model.md](references/subscription-model.md) | Treating "subscription failed" the same as "order failed" produces stuck states and wrong dunning |
 | Dunning is a configurable retry schedule, not a retry-on-failure loop | [references/billing-dunning.md](references/billing-dunning.md) | Ad-hoc retry loops bypass dunning rules and over-charge or under-collect |
 
 ## HIGH Priority
@@ -33,7 +33,7 @@ description: Use for Kibo Subscription Commerce work — implementing recurring 
 | Stored payment methods + off-session SCA / 3DS for recurring charges | [references/billing-dunning.md](references/billing-dunning.md) | Off-session charges that don't handle SCA fail silently in EU markets |
 | Modifications: skip vs swap vs change-frequency are different mutations | [references/modifications.md](references/modifications.md) | Conflating them produces wrong proration |
 | Pause is a retention tool, not a cancel — has different reactivation semantics | [references/retention.md](references/retention.md) | Cancelling instead of pausing loses customer LTV signal |
-| Cancellation: immediate vs end-of-period are policy decisions, not enums | [references/retention.md](references/retention.md) | Wrong policy implementation surprises customers and triggers chargebacks |
+| Cancellation is terminal and immediate — there is no `cancelAtPeriodEnd` flag; end-of-period semantics must be built explicitly (skip-then-cancel or pause-then-cancel) | [references/retention.md](references/retention.md) | Code that assumes Stripe-style `cancel_at_period_end` is configurable surprises customers and triggers chargebacks |
 | Plan attribute changes vs subscription attribute changes apply at different scopes | [references/plans.md](references/plans.md) | Editing the plan affects all subscribers; editing the subscription affects one |
 
 ## MEDIUM Priority

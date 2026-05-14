@@ -291,7 +291,7 @@ Subscription-related event topics:
 
 | Topic | Fires when |
 |-------|-----------|
-| `subscription.statuschanged` | Status moves to Active / Paused / Cancelled / Errored |
+| `subscription.statuschanged` | Status transitions across the lifecycle — `Active`, `Paused`, `Errored`, `Failed`, `Cancelled` (and `Active ⇄ Errored` recycling-recovery flips). Includes `Errored → Failed` when recycling exhausts retries |
 | `subscription.activated` | Subscription becomes Active |
 | `subscription.cancelled` | Subscription is Cancelled |
 | `subscription.errored` | Subscription enters Errored |
@@ -314,7 +314,7 @@ Subscription-related event topics:
 }
 ```
 
-The payload carries only entity IDs. Receivers fetch full state from `GET /commerce/subscriptions/{id}`. Receiver must `200 OK` within 45 seconds. Retry schedule: 5 min, then 1 hr, then 24 hrs. Events expire after 14 days.
+The payload carries only entity IDs. Receivers fetch full state from `GET /commerce/subscriptions/{id}`. Receiver should `200 OK` within 20 seconds (treat 20 s as the safe ceiling — older docs cite 45 s; see `api-setup.md`). Retry schedule (production): `5 min → 1 hr → 6 hr → 24 hr → 24 hr`. Events expire after 14 days.
 
 **Anti-pattern:** polling `GET /commerce/subscriptions/{id}` on a timer to detect status changes. Subscribe to `subscription.statuschanged` and `subscription.paymentupdated`; let the receiver fetch detail on demand.
 
@@ -409,7 +409,7 @@ Before going live with a Kibo Subscriptions integration:
 - [ ] All `PUT /commerce/subscriptions/{id}` calls do GET -> mutate -> PUT, not partial bodies.
 - [ ] No code attempts to reactivate a `Cancelled` Subscription.
 - [ ] Status changes drive on `subscription.statuschanged` event, not polling.
-- [ ] Event receiver `200 OK`s within 45 seconds; full state fetched lazily from the API.
+- [ ] Event receiver `200 OK`s within 20 seconds (the safe ceiling); full state fetched lazily from the API.
 - [ ] Customer aggregation queries use `customerAccountId`, not `subscriptionNumber`, as the join key.
 - [ ] Bundle subscriptions' per-line fulfillment is modeled in OMS, not flattened to "one fulfillment per cycle".
 - [ ] Frequency choice (`Month` vs `Day`) matches the desired calendar semantics — `1 Month` and `30 Days` are not the same.

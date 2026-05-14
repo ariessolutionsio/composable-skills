@@ -157,14 +157,14 @@ Tenant
 ```
 
 - A **Tenant** is the customer's top-level container — typically one per Kibo contract.
-- A **Master Catalog** holds the canonical product data. Multiple catalogs inherit from it. **Locale (`en-US`, `fr-FR`) is set at the master catalog level** and inherited downward.
+- A **Master Catalog** holds the canonical product data. Multiple catalogs inherit from it. **Supported locales (`en-US`, `fr-FR`) are declared at the master catalog level**; per-locale content overrides (`productName`, slug, description) then live in the **child Catalog** under the `localizedContent` arrays — see `catalog.md` for the v2 shape.
 - A **Catalog** is a child of a Master Catalog. It can override price, name, description, and other product fields. **Currency is set at the catalog level** — not on the site, not on the product.
 - A **Site** is a storefront/channel binding. **Each site is bound to exactly one catalog** (non-negotiable). Multiple sites can share a catalog.
 
 Practical consequences:
 
 - **Multi-currency = multi-catalog.** USD + EUR is two catalogs. Two sites if they front different storefronts; one storefront swapping catalog scope per request if it has a currency switcher.
-- **Multi-locale within one currency is fine** — locales live on the master catalog, so one catalog serves `en-US` and `es-US` against USD.
+- **Multi-locale within one currency is fine** — supported locales are declared on the master catalog and per-locale content lives on the child catalog, so one master can serve `en-US` and `es-US` against USD.
 - **A site cannot "borrow" a catalog from another master catalog.** The chain is fixed at site creation.
 
 Tenant and site IDs are integers (rendered `t26507`, `s41315` in URLs). Catalog and master catalog are small integers (`1`, `2`, ...).

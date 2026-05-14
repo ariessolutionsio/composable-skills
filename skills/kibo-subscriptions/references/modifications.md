@@ -1,6 +1,6 @@
 # Modifications to Active Subscriptions
 
-Skip, swap, change-frequency, change-payment, and change-address are different mutations with different scopes, different propagation semantics, and different proration consequences. Conflating them produces wrong reprice math and the wrong customer-facing copy. This file maps each modification to the API call, the timing, and the gotchas.
+Skip, swap, change-frequency, change-payment, and change-address are different mutations with different scopes, different propagation semantics, and different next-cycle reprice consequences. (Kibo has no proration engine — mid-cycle changes never credit or charge for the in-flight cycle; they affect only the next cycle's totals.) Conflating these mutations produces wrong reprice math and the wrong customer-facing copy. This file maps each modification to the API call, the timing, and the gotchas.
 
 ## Table of Contents
 - [Big Idea: These Are Different Mutations](#big-idea-these-are-different-mutations)
